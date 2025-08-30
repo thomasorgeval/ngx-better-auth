@@ -15,7 +15,7 @@ Provides reactive session handling with **signals**, clean **DI provider setup**
 
 | ngx-better-auth | Angular | Better Auth |
 |-----------------|---------|-------------|
-| `^0.1.0`        | `>=20`  | `>=1.3.7`   |
+| `latest`        | `>=20`  | `>=1.3.7`   |
 
 ---
 
@@ -50,6 +50,7 @@ You can inject different services depending on your needs:
 
 ### Global services:
 - `SessionService`
+- `SignInService`
 
 ### Plugin services:
 - `AdminService`

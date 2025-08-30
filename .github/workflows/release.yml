@@ -9,6 +9,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -150,23 +153,13 @@ jobs:
           cat changelog.md
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version_info.outputs.tag_name }}
           name: "${{ steps.version_info.outputs.release_type }} ${{ steps.version_info.outputs.tag_name }}"
           body_path: changelog.md
           prerelease: ${{ steps.version_info.outputs.is_prerelease }}
-          generate_release_notes: false  # On génère nos propres notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update latest release (for non-beta versions only)
-        if: steps.version_info.outputs.is_prerelease == 'false'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.version_info.outputs.tag_name }}
-          name: "${{ steps.version_info.outputs.release_type }} ${{ steps.version_info.outputs.tag_name }}"
-          body_path: changelog.md
-          make_latest: true
+          make_latest: ${{ steps.version_info.outputs.is_prerelease == 'false' }}
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
