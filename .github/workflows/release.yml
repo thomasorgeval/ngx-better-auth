@@ -1,0 +1,172 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-beta.*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Parse version and determine release type
+        id: version_info
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          
+          # Détermine si c'est une version beta ou latest
+          if [[ $TAG_NAME == *"-beta"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "release_type=Beta" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "release_type=Latest" >> $GITHUB_OUTPUT
+          fi
+          
+          # Extrait la version de base (sans suffixe beta)
+          BASE_VERSION=$(echo $TAG_NAME | sed 's/-beta.*//')
+          echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get previous release tag
+        id: previous_tag
+        run: |
+          # Pour les versions latest, trouve la précédente version latest
+          # Pour les versions beta, trouve la précédente version (beta ou latest)
+          if [[ "${{ steps.version_info.outputs.is_prerelease }}" == "false" ]]; then
+            # Pour latest : cherche la dernière version non-beta
+            PREVIOUS_TAG=$(git tag -l "v*.*.*" | grep -v beta | sort -V | tail -n 2 | head -n 1)
+          else
+            # Pour beta : cherche le dernier tag (peu importe le type)
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          fi
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "previous_tag=" >> $GITHUB_OUTPUT
+            echo "Aucun tag précédent trouvé"
+          else
+            echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+            echo "Tag précédent: $PREVIOUS_TAG"
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAG_NAME="${{ steps.version_info.outputs.tag_name }}"
+          PREVIOUS_TAG="${{ steps.previous_tag.outputs.previous_tag }}"
+          IS_PRERELEASE="${{ steps.version_info.outputs.is_prerelease }}"
+          
+          # Initialise le changelog
+          echo "# 🚀 Release $TAG_NAME" > changelog.md
+          echo "" >> changelog.md
+          
+          # Ajoute des badges selon le type de release
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            echo "![Beta](https://img.shields.io/badge/Release-Beta-orange) " >> changelog.md
+          else
+            echo "![Latest](https://img.shields.io/badge/Release-Latest-green) " >> changelog.md
+          fi
+          
+          echo "" >> changelog.md
+          
+          # Génère le changelog basé sur les commits
+          if [ ! -z "$PREVIOUS_TAG" ]; then
+            echo "## 📋 What's Changed" >> changelog.md
+            echo "" >> changelog.md
+          
+            # Récupère les commits entre les deux tags
+            git log --pretty=format:"%s" --no-merges ${PREVIOUS_TAG}..${TAG_NAME} | while read commit; do
+              # Catégorise les commits selon leur préfixe
+              if [[ $commit == feat* ]] || [[ $commit == feature* ]]; then
+                echo "* ✨ $commit" >> changelog.md
+              elif [[ $commit == fix* ]]; then
+                echo "* 🐛 $commit" >> changelog.md
+              elif [[ $commit == docs* ]]; then
+                echo "* 📚 $commit" >> changelog.md
+              elif [[ $commit == style* ]]; then
+                echo "* 💄 $commit" >> changelog.md
+              elif [[ $commit == refactor* ]]; then
+                echo "* ♻️ $commit" >> changelog.md
+              elif [[ $commit == perf* ]]; then
+                echo "* ⚡ $commit" >> changelog.md
+              elif [[ $commit == test* ]]; then
+                echo "* 🧪 $commit" >> changelog.md
+              elif [[ $commit == chore* ]]; then
+                echo "* 🔧 $commit" >> changelog.md
+              elif [[ $commit == ci* ]]; then
+                echo "* 👷 $commit" >> changelog.md
+              else
+                echo "* 📝 $commit" >> changelog.md
+              fi
+            done
+          else
+            echo "## 📋 What's Changed" >> changelog.md
+            echo "" >> changelog.md
+            echo "* 🎉 Initial release" >> changelog.md
+          fi
+          
+          echo "" >> changelog.md
+          
+          # Ajoute des métriques
+          echo "## 📊 Release Stats" >> changelog.md
+          echo "" >> changelog.md
+          
+          if [ ! -z "$PREVIOUS_TAG" ]; then
+            COMMIT_COUNT=$(git rev-list --count ${PREVIOUS_TAG}..${TAG_NAME})
+            echo "* 📦 **$COMMIT_COUNT commits** since $PREVIOUS_TAG" >> changelog.md
+          fi
+          
+          TOTAL_COMMITS=$(git rev-list --count HEAD)
+          echo "* 🔢 **$TOTAL_COMMITS total commits**" >> changelog.md
+          
+          CONTRIBUTORS=$(git shortlog -sn ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | wc -l)
+          echo "* 👥 **$CONTRIBUTORS contributors** in this release" >> changelog.md
+          
+          echo "" >> changelog.md
+          
+          # Ajoute la liste des contributeurs
+          echo "## 👨‍💻 Contributors" >> changelog.md
+          echo "" >> changelog.md
+          git shortlog -sn ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
+            sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' | \
+            sed 's/^/* 🙏 /' >> changelog.md
+          
+          echo "" >> changelog.md
+          echo "---" >> changelog.md
+          echo "*Generated automatically by GitHub Actions* 🤖" >> changelog.md
+          
+          # Affiche le changelog généré
+          echo "Changelog généré:"
+          cat changelog.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version_info.outputs.tag_name }}
+          name: "${{ steps.version_info.outputs.release_type }} ${{ steps.version_info.outputs.tag_name }}"
+          body_path: changelog.md
+          prerelease: ${{ steps.version_info.outputs.is_prerelease }}
+          generate_release_notes: false  # On génère nos propres notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update latest release (for non-beta versions only)
+        if: steps.version_info.outputs.is_prerelease == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version_info.outputs.tag_name }}
+          name: "${{ steps.version_info.outputs.release_type }} ${{ steps.version_info.outputs.tag_name }}"
+          body_path: changelog.md
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
