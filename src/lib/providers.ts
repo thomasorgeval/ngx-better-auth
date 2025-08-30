@@ -11,7 +11,7 @@ export function provideBetterAuth(options: BetterAuthOptions): EnvironmentProvid
 
   // if baseURL is not a url, it might be because of a proxy in development
   if (!config.baseURL?.startsWith('http')) {
-    config.baseURL = window.location.origin + config.baseURL
+    config.baseURL = window.location.origin
   }
 
   return makeEnvironmentProviders([{ provide: BETTER_AUTH_CONFIG_TOKEN, useValue: config }, AuthService])
