@@ -1,8 +1,10 @@
 {
   "name": "ngx-better-auth",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Thomas Orgeval",
-  "maintainers": ["orgevalthomas@gmail.com"],
+  "maintainers": [
+    "orgevalthomas@gmail.com"
+  ],
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -12,7 +14,13 @@
   },
   "packageManager": "pnpm@10.15.0",
   "license": "MIT",
-  "keywords": ["angular", "authentication", "auth", "better-auth", "ngx"],
+  "keywords": [
+    "angular",
+    "authentication",
+    "auth",
+    "better-auth",
+    "ngx"
+  ],
   "peerDependencies": {
     "@angular/core": ">=20.0.0",
     "@angular/common": ">=20.0.0",
