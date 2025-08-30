@@ -1,0 +1,22 @@
+{
+  "tabWidth": 2,
+  "bracketSpacing": true,
+  "printWidth": 140,
+  "overrides": [
+    {
+      "files": "**/*.ts",
+      "options": {
+        "semi": false,
+        "singleQuote": true
+      }
+    },
+    {
+      "files": "**/*.html",
+      "options": {
+        "bracketSameLine": true,
+        "singleQuote": false,
+        "singleAttributePerLine": true
+      }
+    }
+  ]
+}

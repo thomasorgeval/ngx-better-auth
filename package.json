@@ -1,0 +1,42 @@
+{
+  "name": "ngx-better-auth",
+  "version": "0.1.0",
+  "author": "Thomas Orgeval",
+  "maintainers": ["orgevalthomas@gmail.com"],
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "packageManager": "pnpm@10.15.0",
+  "license": "MIT",
+  "keywords": ["angular", "authentication", "auth", "better-auth", "ngx"],
+  "peerDependencies": {
+    "@angular/core": ">=20.0.0",
+    "@angular/common": ">=20.0.0",
+    "@angular/router": ">=20.0.0",
+    "better-auth": ">=1.3.7",
+    "rxjs": ">=7.8.0",
+    "tslib": ">=2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^20.2.1",
+    "@angular/cli": "^20.2.1",
+    "@angular/compiler": "^20.2.0",
+    "@angular/compiler-cli": "^20.2.0",
+    "@angular/platform-browser-dynamic": "^20.2.3",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.9.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "ng-packagr": "^20.2.0",
+    "prettier": "^3.6.2",
+    "typescript": "~5.9.2",
+    "zone.js": "^0.15.1"
+  }
+}

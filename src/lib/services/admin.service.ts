@@ -1,0 +1,65 @@
+import { inject, Injectable } from '@angular/core'
+import { defer } from 'rxjs'
+import { AuthService } from './auth.service'
+import { validateAdminPlugin } from '../utils/validate-plugin'
+
+@Injectable({ providedIn: 'root' })
+export class AdminService {
+  private readonly authService = inject(AuthService)
+
+  admin: any
+
+  constructor() {
+    const client = this.authService.authClient as { admin?: any }
+    validateAdminPlugin(client, 'admin')
+    this.admin = client.admin
+  }
+
+  setRole(data: { userId: string; role: any }) {
+    return defer(() => this.admin.setRole(data))
+  }
+
+  setUserPassword(data: { userId: string; newPassword: string }) {
+    return defer(() => this.admin.setUserPassword(data))
+  }
+
+  banUser(data: { userId: string; banReason?: string; banExpiresIn?: number }) {
+    return defer(() => this.admin.banUser(data))
+  }
+
+  unbanUser(data: { userId: string }) {
+    return defer(() => this.admin.unbanUser(data))
+  }
+
+  listUserSessions(data: { userId: string }) {
+    return defer(() => this.admin.listUserSessions(data))
+  }
+
+  revokeUserSession(data: { sessionToken: string }) {
+    return defer(() => this.admin.revokeUserSession(data))
+  }
+
+  revokeUserSessions(data: { userId: string }) {
+    return defer(() => this.admin.revokeUserSessions(data))
+  }
+
+  impersonateUser(data: { userId: string }) {
+    return defer(() => this.admin.impersonateUser(data))
+  }
+
+  stopImpersonating() {
+    return defer(() => this.admin.stopImpersonating())
+  }
+
+  removeUser(data: { userId: string }) {
+    return defer(() => this.admin.removeUser(data))
+  }
+
+  hasPermission(data: { userId?: string; permission?: any; permissions?: any }) {
+    return defer(() => this.admin.hasPermission(data))
+  }
+
+  checkRolePermission(data: { role: any; permission: any }) {
+    return this.admin.checkRolePermission(data)
+  }
+}
