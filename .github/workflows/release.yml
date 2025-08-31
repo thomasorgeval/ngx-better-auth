@@ -39,30 +39,42 @@ jobs:
       - name: Get previous release tag
         id: previous_tag
         run: |
+          set -e
+          
           # Pour les versions latest, trouve la précédente version latest
           # Pour les versions beta, trouve la précédente version (beta ou latest)
           if [[ "${{ steps.version_info.outputs.is_prerelease }}" == "false" ]]; then
             # Pour latest : cherche la dernière version non-beta
-            PREVIOUS_TAG=$(git tag -l "v*.*.*" | grep -v beta | sort -V | tail -n 2 | head -n 1)
+            PREVIOUS_TAG=$(git tag -l "v*.*.*" | grep -v beta | sort -V | tail -n 2 | head -n 1 || echo "")
           else
             # Pour beta : cherche le dernier tag (peu importe le type)
             PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           fi
           
+          # Vérifie que le tag existe vraiment
+          if [ ! -z "$PREVIOUS_TAG" ] && ! git rev-parse "$PREVIOUS_TAG" >/dev/null 2>&1; then
+            echo "⚠️ Warning: Previous tag $PREVIOUS_TAG not found, using initial commit instead"
+            PREVIOUS_TAG=""
+          fi
+          
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "previous_tag=" >> $GITHUB_OUTPUT
-            echo "Aucun tag précédent trouvé"
+            echo "Aucun tag précédent trouvé - première release"
           else
             echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
-            echo "Tag précédent: $PREVIOUS_TAG"
+            echo "Tag précédent trouvé: $PREVIOUS_TAG"
           fi
 
       - name: Generate changelog
         id: changelog
         run: |
+          set -e
+          
           TAG_NAME="${{ steps.version_info.outputs.tag_name }}"
           PREVIOUS_TAG="${{ steps.previous_tag.outputs.previous_tag }}"
           IS_PRERELEASE="${{ steps.version_info.outputs.is_prerelease }}"
+          
+          echo "🔍 Debug: TAG_NAME=$TAG_NAME, PREVIOUS_TAG=$PREVIOUS_TAG, IS_PRERELEASE=$IS_PRERELEASE"
           
           # Initialise le changelog
           echo "# 🚀 Release $TAG_NAME" > changelog.md
@@ -78,22 +90,20 @@ jobs:
           echo "" >> changelog.md
           
           # Génère le changelog basé sur les commits
-          if [ ! -z "$PREVIOUS_TAG" ]; then
-            echo "## 📋 What's Changed" >> changelog.md
-            echo "" >> changelog.md
+          echo "## 📋 What's Changed" >> changelog.md
+          echo "" >> changelog.md
           
-            # Utilise un fichier temporaire pour éviter les problèmes de sous-shell
-            TEMP_FILE=$(mktemp)
+          if [ ! -z "$PREVIOUS_TAG" ]; then
+            echo "🔍 Getting commits between $PREVIOUS_TAG and $TAG_NAME..."
           
             # Récupère les commits avec auteur, en excluant les commits de release
-            git log --pretty=format:"%s|%an" --no-merges ${PREVIOUS_TAG}..${TAG_NAME} | \
-              grep -v "^chore: release\|^release:\|^bump version\|^version bump" > "$TEMP_FILE"
-          
-            # Vérifie si on a des commits à traiter
-            if [ -s "$TEMP_FILE" ]; then
+            COMMITS_FOUND=false
+            git log --pretty=format:"%s|%an" --no-merges ${PREVIOUS_TAG}..HEAD | \
+              grep -v "^chore: release\|^release:\|^bump version\|^version bump" | \
               while IFS='|' read -r commit author; do
                 # Évite les lignes vides
                 if [ ! -z "$commit" ]; then
+                  COMMITS_FOUND=true
                   # Catégorise les commits selon leur préfixe
                   if [[ $commit == feat* ]] || [[ $commit == feature* ]]; then
                     echo "* ✨ $commit by @$author" >> changelog.md
@@ -121,68 +131,58 @@ jobs:
                     echo "* 📝 $commit by @$author" >> changelog.md
                   fi
                 fi
-              done < "$TEMP_FILE"
-            else
+              done
+          
+            # Si aucun commit trouvé, ajoute un message par défaut
+            if ! git log --oneline --no-merges ${PREVIOUS_TAG}..HEAD | grep -v "chore: release\|release:\|bump version\|version bump" | head -1 >/dev/null 2>&1; then
               echo "* 🔧 Version maintenance and updates" >> changelog.md
             fi
-          
-            # Nettoie le fichier temporaire
-            rm "$TEMP_FILE"
           else
-            echo "## 📋 What's Changed" >> changelog.md
-            echo "" >> changelog.md
             echo "* 🎉 Initial release" >> changelog.md
           fi
           
           echo "" >> changelog.md
           
-          # Ajoute des métriques (en excluant les commits de release)
+          # Ajoute des métriques (version simplifiée et sécurisée)
           echo "## 📊 Release Stats" >> changelog.md
           echo "" >> changelog.md
           
           if [ ! -z "$PREVIOUS_TAG" ]; then
             # Compte les commits en excluant ceux de release
-            COMMIT_COUNT=$(git log --oneline --no-merges ${PREVIOUS_TAG}..${TAG_NAME} | \
-              grep -v "chore: release\|release:\|bump version\|version bump" | wc -l)
+            COMMIT_COUNT=$(git log --oneline --no-merges ${PREVIOUS_TAG}..HEAD 2>/dev/null | \
+              grep -v "chore: release\|release:\|bump version\|version bump" | wc -l || echo "0")
             echo "* 📦 **$COMMIT_COUNT commits** since $PREVIOUS_TAG" >> changelog.md
           fi
           
-          TOTAL_COMMITS=$(git rev-list --count HEAD)
+          TOTAL_COMMITS=$(git rev-list --count HEAD 2>/dev/null || echo "unknown")
           echo "* 🔢 **$TOTAL_COMMITS total commits**" >> changelog.md
           
-          # Compte les contributeurs uniques (en excluant les commits de release)
-          TEMP_CONTRIBUTORS=$(mktemp)
-          git log --pretty=format:"%an" --no-merges ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
-            grep -v -f <(git log --pretty=format:"%an" --no-merges ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} --grep="chore: release\|release:\|bump version\|version bump") | \
-            sort -u > "$TEMP_CONTRIBUTORS" 2>/dev/null || \
-            git shortlog -sn ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
-            grep -v -E "(chore: release|release:|bump version|version bump)" | wc -l > "$TEMP_CONTRIBUTORS"
-          
-          CONTRIBUTORS=$(cat "$TEMP_CONTRIBUTORS" | wc -l)
-          echo "* 👥 **$CONTRIBUTORS contributors** in this release" >> changelog.md
-          rm "$TEMP_CONTRIBUTORS"
-          
+          # Version simplifiée pour les contributeurs
           echo "" >> changelog.md
-          
-          # Ajoute la liste des contributeurs (version améliorée)
           echo "## 👨‍💻 Contributors" >> changelog.md
           echo "" >> changelog.md
           
-          # Récupère les contributeurs uniques avec leur nombre de commits
-          git shortlog -sn ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
-            while read count author; do
-              # Vérifie si l'auteur a des commits non-release
-              NON_RELEASE_COMMITS=$(git log --author="$author" --oneline --no-merges ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
-                grep -v "chore: release\|release:\|bump version\|version bump" | wc -l)
-          
-              if [ "$NON_RELEASE_COMMITS" -gt 0 ]; then
-                if [ "$NON_RELEASE_COMMITS" -eq 1 ]; then
-                  echo "* 🙏 **$author** ($NON_RELEASE_COMMITS commit)" >> changelog.md
-                else
-                  echo "* 🙏 **$author** ($NON_RELEASE_COMMITS commits)" >> changelog.md
+          if [ ! -z "$PREVIOUS_TAG" ]; then
+            git shortlog -sn ${PREVIOUS_TAG}..HEAD 2>/dev/null | \
+              head -10 | \
+              while read count author; do
+                if [ ! -z "$author" ]; then
+                  if [ "$count" -eq 1 ]; then
+                    echo "* 🙏 **$author** ($count commit)" >> changelog.md
+                  else
+                    echo "* 🙏 **$author** ($count commits)" >> changelog.md
+                  fi
                 fi
-              fi
-            done
+              done || echo "* 🙏 Contributors information unavailable" >> changelog.md
+          else
+            git shortlog -sn 2>/dev/null | \
+              head -5 | \
+              while read count author; do
+                if [ ! -z "$author" ]; then
+                  echo "* 🙏 **$author** ($count commits)" >> changelog.md
+                fi
+              done || echo "* 🙏 Contributors information unavailable" >> changelog.md
+          fi
           
           echo "" >> changelog.md
           
@@ -198,7 +198,7 @@ jobs:
           echo "*Generated automatically by GitHub Actions* 🤖" >> changelog.md
           
           # Affiche le changelog généré pour debug
-          echo "Changelog généré:"
+          echo "📋 Changelog généré:"
           cat changelog.md
           
           # Sauvegarde le changelog pour le step suivant

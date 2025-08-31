@@ -91,4 +91,8 @@ export class AuthService {
   signInProvider(provider: Provider) {
     return defer(() => this.authClient.signIn.social({ provider }))
   }
+
+  signOut() {
+    return defer(() => this.authClient.signOut())
+  }
 }
