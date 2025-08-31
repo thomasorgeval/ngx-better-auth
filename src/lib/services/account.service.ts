@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
-import { defer } from 'rxjs'
+import { defer, map, Observable } from 'rxjs'
 import { MainService } from './main.service'
-import { Provider } from '../models'
+import { Account, Provider } from '../models'
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
@@ -9,8 +9,8 @@ export class AccountService {
 
   private readonly client = this.mainService.authClient
 
-  listAccounts() {
-    return defer(() => this.client.listAccounts())
+  listAccounts(): Observable<Account[]> {
+    return defer(() => this.client.listAccounts()).pipe(map((data) => this.mainService.mapData<Account[]>(data as any)))
   }
 
   linkSocial(data: {
@@ -23,11 +23,13 @@ export class AccountService {
       accessToken?: string
       refreshToken?: string
     }
-  }) {
-    return defer(() => this.client.linkSocial(data))
+  }): Observable<{ url: string; redirect: boolean }> {
+    return defer(() => this.client.linkSocial(data)).pipe(
+      map((data) => this.mainService.mapData<{ url: string; redirect: boolean }>(data as any)),
+    )
   }
 
-  unlinkAccount(data: { providerId: Provider; accountId: string }) {
-    return defer(() => this.client.unlinkAccount(data))
+  unlinkAccount(data: { providerId: Provider; accountId: string }): Observable<{ status: boolean }> {
+    return defer(() => this.client.unlinkAccount(data)).pipe(map((data) => this.mainService.mapData<{ status: boolean }>(data as any)))
   }
 }

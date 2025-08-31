@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core'
-import { defer } from 'rxjs'
+import { defer, map, Observable } from 'rxjs'
 import { MainService } from './main.service'
+import { Session } from '../models'
 
 @Injectable({ providedIn: 'root' })
 export class SessionService {
@@ -8,19 +9,21 @@ export class SessionService {
 
   private readonly client = this.mainService.authClient
 
-  listSessions() {
-    return defer(() => this.client.listSessions())
+  listSessions(): Observable<Session[]> {
+    return defer(() => this.client.listSessions()).pipe(map((data) => this.mainService.mapData<Session[]>(data as any)))
   }
 
-  revokeSession(sessionToken: string) {
-    return defer(() => this.client.revokeSession({ token: sessionToken }))
+  revokeSession(sessionToken: string): Observable<{ success: boolean }> {
+    return defer(() => this.client.revokeSession({ token: sessionToken })).pipe(
+      map((data) => this.mainService.mapData<{ success: boolean }>(data as any)),
+    )
   }
 
-  revokeOtherSessions() {
-    return defer(() => this.client.revokeOtherSessions())
+  revokeOtherSessions(): Observable<{ success: boolean }> {
+    return defer(() => this.client.revokeOtherSessions()).pipe(map((data) => this.mainService.mapData<{ success: boolean }>(data as any)))
   }
 
-  revokeAllSessions() {
-    return defer(() => this.client.revokeSessions())
+  revokeAllSessions(): Observable<{ success: boolean }> {
+    return defer(() => this.client.revokeSessions()).pipe(map((data) => this.mainService.mapData<{ success: boolean }>(data as any)))
   }
 }

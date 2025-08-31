@@ -11,4 +11,11 @@ export class MainService {
   readonly authClient = createAuthClient({
     ...this.config,
   })
+
+  mapData<T>(data: { data: T; error: Error }): T {
+    if (data.error) {
+      throw data.error
+    }
+    return data.data
+  }
 }
