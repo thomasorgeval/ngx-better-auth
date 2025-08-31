@@ -4,6 +4,8 @@ import { AuthSession, Provider } from '../models'
 import { defer, filter, map, Observable, shareReplay, switchMap, tap } from 'rxjs'
 import { MainService } from './main.service'
 import { SocialProviderList } from 'better-auth/social-providers'
+import { isEmail } from '../utils/email.util'
+import { logger } from 'better-auth'
 
 @Injectable({
   providedIn: 'root',
@@ -83,13 +85,11 @@ export class AuthService {
    * pass either email or username to sign in. Needs username plugin enabled to use username.
    * @param data : { email?: string; username?: string; password: string; rememberMe?: boolean }
    */
-  signIn(data: { email?: string; username?: string; password: string; rememberMe?: boolean }) {
-    if (data.email) {
-      return this.signInEmail({ email: data.email, password: data.password, rememberMe: data.rememberMe })
-    } else if (data.username) {
-      return this.signInUsername({ username: data.username, password: data.password, rememberMe: data.rememberMe })
+  signIn(data: { login: string; password: string; rememberMe?: boolean }) {
+    if (isEmail(data.login)) {
+      return this.signInEmail({ email: data.login, password: data.password, rememberMe: data.rememberMe })
     } else {
-      throw new Error('Either email or username must be provided')
+      return this.signInUsername({ username: data.login, password: data.password, rememberMe: data.rememberMe })
     }
   }
 
