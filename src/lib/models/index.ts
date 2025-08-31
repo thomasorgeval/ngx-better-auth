@@ -1,4 +1,6 @@
 export * from './session'
 export * from './provider'
-export * from './error'
 export * from './account'
+export * from './user'
+export * from './passkey'
+export * from './organization'

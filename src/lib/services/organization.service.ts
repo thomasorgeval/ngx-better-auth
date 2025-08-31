@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core'
-import { defer } from 'rxjs'
+import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../utils/validate-plugin'
 import { MainService } from './main.service'
+import { Invitation, Member, Member2, Organization } from '../models'
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
@@ -15,30 +16,42 @@ export class OrganizationService {
     this.organization = client.organization
   }
 
-  createOrganization(data: {
+  create(data: {
     name: string
     slug: string
     logo?: string
     metadata?: Record<string, any>
     keepCurrentActiveOrganization?: boolean
-  }) {
-    return defer(() => this.organization.create(data))
+  }): Observable<Organization> {
+    return defer(() => this.organization.create(data)).pipe(
+      map((data) => this.mainService.mapData<Organization>(data as any)),
+    )
   }
 
-  checkSlug(data: { slug: string }) {
+  checkSlug(data: { slug: string }): Observable<unknown> {
     return defer(() => this.organization.checkSlug(data))
   }
 
-  list() {
-    return defer(() => this.organization.list())
+  list(): Observable<Organization[]> {
+    return defer(() => this.organization.list()).pipe(
+      map((data) => this.mainService.mapData<Organization[]>(data as any)),
+    )
   }
 
-  setActive(data: { organizationId?: string | null; organizationSlug?: string }) {
-    return defer(() => this.organization.setActive(data))
+  setActive(data: { organizationId?: string; organizationSlug?: string }): Observable<Organization> {
+    return defer(() => this.organization.setActive(data)).pipe(
+      map((data) => this.mainService.mapData<Organization>(data as any)),
+    )
   }
 
-  getFullOrganization(data: { organizationId?: string; organizationSlug?: string; membersLimit?: number }) {
-    return defer(() => this.organization.getFullOrganization(data))
+  getFullOrganization(data: {
+    organizationId?: string
+    organizationSlug?: string
+    membersLimit?: number
+  }): Observable<Organization> {
+    return defer(() => this.organization.getFullOrganization(data)).pipe(
+      map((data) => this.mainService.mapData<Organization>(data as any)),
+    )
   }
 
   update(data: {
@@ -49,40 +62,76 @@ export class OrganizationService {
       metadata?: Record<string, any>
     }
     organizationId?: string
-  }) {
-    return defer(() => this.organization.update(data))
+  }): Observable<Organization> {
+    return defer(() => this.organization.update(data)).pipe(
+      map((data) => this.mainService.mapData<Organization>(data as any)),
+    )
   }
 
-  delete(data: { organizationId: string }) {
-    return defer(() => this.organization.delete(data))
+  delete(data: { organizationId: string }): Observable<void> {
+    return defer(() => this.organization.delete(data)).pipe(map((data) => this.mainService.mapData<void>(data as any)))
   }
 
-  inviteMember(data: { email: string; role: string | string[]; organizationId?: string; resend?: boolean; teamId?: string }) {
-    return defer(() => this.organization.inviteMember(data))
+  inviteMember(data: {
+    email: string
+    role: string | string[]
+    organizationId?: string
+    resend?: boolean
+    teamId?: string
+  }): Observable<Invitation> {
+    return defer(() => this.organization.inviteMember(data)).pipe(
+      map((data) => this.mainService.mapData<Invitation>(data as any)),
+    )
   }
 
-  acceptInvitation(data: { invitationId: string }) {
-    return defer(() => this.organization.acceptInvitation(data))
+  acceptInvitation(data: { invitationId: string }): Observable<{ invitation: Invitation; member: Member }> {
+    return defer(() => this.organization.acceptInvitation(data)).pipe(
+      map((data) => this.mainService.mapData<{ invitation: Invitation; member: Member }>(data as any)),
+    )
   }
 
-  cancelInvitation(data: { invitationId: string }) {
-    return defer(() => this.organization.cancelInvitation(data))
+  cancelInvitation(data: { invitationId: string }): Observable<void> {
+    return defer(() => this.organization.cancelInvitation(data)).pipe(
+      map((data) => this.mainService.mapData<void>(data as any)),
+    )
   }
 
-  rejectInvitation(data: { invitationId: string }) {
-    return defer(() => this.organization.rejectInvitation(data))
+  rejectInvitation(data: { invitationId: string }): Observable<{ invitation: Invitation; member: null }> {
+    return defer(() => this.organization.rejectInvitation(data)).pipe(
+      map((data) => this.mainService.mapData<{ invitation: Invitation; member: null }>(data as any)),
+    )
   }
 
-  getInvitation(data: { id: string }) {
-    return defer(() => this.organization.getInvitation(data))
+  getInvitation(data: { id: string }): Observable<
+    {
+      organizationName: string
+      organizationSlug: string
+      inviterEmail: string
+    } & Invitation
+  > {
+    return defer(() => this.organization.getInvitation(data)).pipe(
+      map((data) =>
+        this.mainService.mapData<
+          {
+            organizationName: string
+            organizationSlug: string
+            inviterEmail: string
+          } & Invitation
+        >(data as any),
+      ),
+    )
   }
 
-  listInvitations(data: { organizationId?: string }) {
-    return defer(() => this.organization.listInvitations(data))
+  listInvitations(data: { organizationId?: string }): Observable<Invitation[]> {
+    return defer(() => this.organization.listInvitations(data)).pipe(
+      map((data) => this.mainService.mapData<Invitation[]>(data as any)),
+    )
   }
 
-  listUserInvitations() {
-    return defer(() => this.organization.listUserInvitations())
+  listUserInvitations(): Observable<Invitation[]> {
+    return defer(() => this.organization.listUserInvitations()).pipe(
+      map((data) => this.mainService.mapData<Invitation[]>(data as any)),
+    )
   }
 
   listMembers(
@@ -100,20 +149,24 @@ export class OrganizationService {
     return defer(() => this.organization.listMembers(data))
   }
 
-  removeMember(data: { memberIdOrEmail: string; organizationId?: string }) {
-    return defer(() => this.organization.removeMember(data))
+  removeMember(data: { memberIdOrEmail: string; organizationId?: string }): Observable<{ member: Member2 }> {
+    return defer(() => this.organization.removeMember(data)).pipe(
+      map((data) => this.mainService.mapData<{ member: Member2 }>(data as any)),
+    )
   }
 
   updateMemberRoles(data: { memberId: string; role: string | string[]; organizationId?: string }) {
     return defer(() => this.organization.updateMemberRoles(data))
   }
 
-  getActiveMember() {
-    return defer(() => this.organization.getActiveMember())
+  getActiveMember(): Observable<Member2> {
+    return defer(() => this.organization.getActiveMember()).pipe(
+      map((data) => this.mainService.mapData<Member2>(data as any)),
+    )
   }
 
-  leave(data: { organizationId?: string }) {
-    return defer(() => this.organization.leave(data))
+  leave(data: { organizationId?: string }): Observable<void> {
+    return defer(() => this.organization.leave(data)).pipe(map((data) => this.mainService.mapData<void>(data as any)))
   }
 
   createTeam(data: { name: string; organizationId?: string }) {
@@ -124,7 +177,10 @@ export class OrganizationService {
     return defer(() => this.organization.listTeams(data))
   }
 
-  updateTeam(data: { teamId: string; data: { name?: string; organizationId?: string; createdAt?: Date; updatedAt?: Date } }) {
+  updateTeam(data: {
+    teamId: string
+    data: { name?: string; organizationId?: string; createdAt?: Date; updatedAt?: Date }
+  }) {
     return defer(() => this.organization.updateTeam(data))
   }
 

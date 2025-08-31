@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core'
-import { defer } from 'rxjs'
+import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../utils/validate-plugin'
 import { MainService } from './main.service'
+import { Session3, User } from '../models'
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -15,51 +16,106 @@ export class AdminService {
     this.admin = client.admin
   }
 
-  setRole(data: { userId: string; role: any }) {
-    return defer(() => this.admin.setRole(data))
+  setRole(data: { userId: string; role: string | string[] }): Observable<{ user: User }> {
+    return defer(() => this.admin.setRole(data)).pipe(
+      map((data) => this.mainService.mapData<{ user: User }>(data as any)),
+    )
   }
 
-  setUserPassword(data: { userId: string; newPassword: string }) {
-    return defer(() => this.admin.setUserPassword(data))
+  createUser(data: {
+    email: string
+    password: string
+    name: string
+    role?: string | string[]
+    data?: Record<string, any>
+  }): Observable<{ user: User }> {
+    return defer(() => this.admin.createUser(data)).pipe(
+      map((data) => this.mainService.mapData<{ user: User }>(data as any)),
+    )
   }
 
-  banUser(data: { userId: string; banReason?: string; banExpiresIn?: number }) {
-    return defer(() => this.admin.banUser(data))
+  updateUser(data: { userId: string; data: Partial<User> }): Observable<{ user: User }> {
+    return defer(() => this.admin.updateUser(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ user: User }>(data)),
+    )
   }
 
-  unbanUser(data: { userId: string }) {
-    return defer(() => this.admin.unbanUser(data))
+  listUsers(data: {
+    searchValue?: string
+    searchField?: 'email' | 'name'
+    searchOperator?: 'contains' | 'start_with' | 'end_with'
+    limit?: number
+    offset?: number
+    sortBy?: string
+    sortDirection?: 'asc' | 'desc'
+    filterField?: string
+    filterValue?: string | number | boolean
+    filterOperator?: 'eq' | 'ne' | 'lt' | 'lte' | 'gt' | 'gte'
+  }): Observable<{ users: User[]; total: number; limit: number; offset: number }> {
+    return defer(() => this.admin.listUsers(data)).pipe(
+      map((data: any) =>
+        this.mainService.mapData<{ users: User[]; total: number; limit: number; offset: number }>(data as any),
+      ),
+    )
   }
 
-  listUserSessions(data: { userId: string }) {
-    return defer(() => this.admin.listUserSessions(data))
+  listUserSessions(data: { userId: string }): Observable<{ sessions: Session3[] }> {
+    return defer(() => this.admin.listUserSessions(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ sessions: Session3[] }>(data)),
+    )
   }
 
-  revokeUserSession(data: { sessionToken: string }) {
-    return defer(() => this.admin.revokeUserSession(data))
+  unbanUser(data: { userId: string }): Observable<{ user: User }> {
+    return defer(() => this.admin.unbanUser(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ user: User }>(data)),
+    )
   }
 
-  revokeUserSessions(data: { userId: string }) {
-    return defer(() => this.admin.revokeUserSessions(data))
+  banUser(data: { userId: string; banReason?: string; banExpiresIn?: number }): Observable<{ user: User }> {
+    return defer(() => this.admin.banUser(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ user: User }>(data)),
+    )
   }
 
-  impersonateUser(data: { userId: string }) {
-    return defer(() => this.admin.impersonateUser(data))
+  impersonateUser(data: { userId: string }): Observable<{ session: Session3; user: User }> {
+    return defer(() => this.admin.impersonateUser(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ session: Session3; user: User }>(data)),
+    )
   }
 
-  stopImpersonating() {
+  stopImpersonating(): Observable<unknown> {
     return defer(() => this.admin.stopImpersonating())
   }
 
-  removeUser(data: { userId: string }) {
-    return defer(() => this.admin.removeUser(data))
+  revokeUserSession(data: { sessionToken: string }): Observable<{ success: boolean }> {
+    return defer(() => this.admin.revokeUserSession(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ success: boolean }>(data)),
+    )
   }
 
-  hasPermission(data: { userId?: string; permission?: any; permissions?: any }) {
+  revokeUserSessions(data: { userId: string }): Observable<{ success: boolean }> {
+    return defer(() => this.admin.revokeUserSessions(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ success: boolean }>(data)),
+    )
+  }
+
+  removeUser(data: { userId: string }): Observable<{ success: boolean }> {
+    return defer(() => this.admin.removeUser(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ success: boolean }>(data)),
+    )
+  }
+
+  setUserPassword(data: { userId: string; newPassword: string }): Observable<{ success: boolean }> {
+    return defer(() => this.admin.setUserPassword(data)).pipe(
+      map((data: any) => this.mainService.mapData<{ success: boolean }>(data)),
+    )
+  }
+
+  hasPermission(data: { userId?: string; permissions: Record<string, string[]> }) {
     return defer(() => this.admin.hasPermission(data))
   }
 
-  checkRolePermission(data: { role: any; permission: any }) {
-    return this.admin.checkRolePermission(data)
+  checkRolePermission(data: { role: string; permissions: Record<string, string[]> }) {
+    return defer(() => this.admin.checkRolePermission(data))
   }
 }

@@ -29,7 +29,10 @@ export function redirectLoggedInTo(commands: string[] = ['/']): () => Observable
  * Allows access only to users with at least one of the specified roles.
  * Redirects unauthorized users to the specified commands (route).
  */
-export function hasRole(requiredRoles: string[], redirectTo: string[] = ['/unauthorized']): () => Observable<UrlTree | boolean> {
+export function hasRole(
+  requiredRoles: string[],
+  redirectTo: string[] = ['/unauthorized'],
+): () => Observable<UrlTree | boolean> {
   return () => {
     const auth = inject(AuthService)
     const router = inject(Router)
@@ -40,7 +43,7 @@ export function hasRole(requiredRoles: string[], redirectTo: string[] = ['/unaut
           return router.createUrlTree(redirectTo)
         }
 
-        const role = session?.user?.role
+        const role = session?.user?.['role']
         if (Array.isArray(role)) {
           if (role.some((r) => requiredRoles.includes(r))) {
             return true

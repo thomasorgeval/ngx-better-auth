@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core'
-import { defer } from 'rxjs'
+import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../utils/validate-plugin'
 import { MainService } from './main.service'
+import { Session3, User } from '../models'
 
 @Injectable({ providedIn: 'root' })
 export class TwoFactorService {
@@ -15,35 +16,64 @@ export class TwoFactorService {
     this.twoFactor = client.twoFactor
   }
 
-  enable(data: { password: string; issuer?: string }) {
-    return defer(() => this.twoFactor.enable(data))
+  enable(data: { password: string; issuer?: string }): Observable<{ totpURI: string; backupCodes: string[] }> {
+    return defer(() => this.twoFactor.enable(data)).pipe(
+      map((data) =>
+        this.mainService.mapData<{
+          totpURI: string
+          backupCodes: string[]
+        }>(data as any),
+      ),
+    )
   }
 
-  disable(data: { password: string }) {
-    return defer(() => this.twoFactor.disable(data))
+  disable(data: { password: string }): Observable<{ status: boolean }> {
+    return defer(() => this.twoFactor.disable(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 
-  getTotpUri(data: { password: string }) {
-    return defer(() => this.twoFactor.getTotpUri(data))
+  getTotpUri(data: { password: string }): Observable<{ totpURI: string }> {
+    return defer(() => this.twoFactor.getTotpUri(data)).pipe(
+      map((data) => this.mainService.mapData<{ totpURI: string }>(data as any)),
+    )
   }
 
-  verifyTotp(data: { code: string; trustDevice?: boolean }) {
-    return defer(() => this.twoFactor.verifyTotp(data))
+  verifyTotp(data: { code: string; trustDevice?: boolean }): Observable<{ status: boolean }> {
+    return defer(() => this.twoFactor.verifyTotp(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 
-  sendOtp(data: { trustDevice?: boolean }) {
-    return defer(() => this.twoFactor.sendOtp(data))
+  sendOtp(): Observable<{ status: boolean }> {
+    return defer(() => this.twoFactor.sendOtp()).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 
-  verifyOtp(data: { code: string; trustDevice?: boolean }) {
-    return defer(() => this.twoFactor.verifyOtp(data))
+  verifyOtp(data: { code: string; trustDevice?: boolean }): Observable<{ token: string; user: User }> {
+    return defer(() => this.twoFactor.verifyOtp(data)).pipe(
+      map((data) => this.mainService.mapData<{ token: string; user: User }>(data as any)),
+    )
   }
 
-  generateBackupCodes(data: { password: string }) {
-    return defer(() => this.twoFactor.generateBackupCodes(data))
+  generateBackupCodes(data: { password: string }): Observable<{ status: boolean; backupCodes: string[] }> {
+    return defer(() => this.twoFactor.generateBackupCodes(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean; backupCodes: string[] }>(data as any)),
+    )
   }
 
-  verifyBackupCode(data: { code: string; disableSession?: boolean; trustDevice?: boolean }) {
-    return defer(() => this.twoFactor.verifyBackupCode(data))
+  verifyBackupCode(data: { code: string; disableSession?: boolean; trustDevice?: boolean }): Observable<{
+    user: User
+    session: Session3
+  }> {
+    return defer(() => this.twoFactor.verifyBackupCode(data)).pipe(
+      map((data) =>
+        this.mainService.mapData<{
+          user: User
+          session: Session3
+        }>(data as any),
+      ),
+    )
   }
 }

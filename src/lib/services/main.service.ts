@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core'
 import { BETTER_AUTH_CONFIG_TOKEN } from '../providers'
-import { createAuthClient } from 'better-auth/client'
+import { BetterFetchError, createAuthClient } from 'better-auth/client'
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +12,7 @@ export class MainService {
     ...this.config,
   })
 
-  mapData<T>(data: { data: T; error: Error }): T {
+  mapData<T>(data: { data: T; error: BetterFetchError }): T {
     if (data.error) {
       throw data.error
     }

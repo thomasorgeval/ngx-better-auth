@@ -1,11 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core'
 import { BetterFetchError } from 'better-auth/client'
-import { AuthSession, Provider } from '../models'
-import { defer, filter, map, Observable, shareReplay, switchMap, tap } from 'rxjs'
+import { Provider, Session3, User } from '../models'
+import { defer, filter, map, Observable, shareReplay, switchMap } from 'rxjs'
 import { MainService } from './main.service'
-import { SocialProviderList } from 'better-auth/social-providers'
-import { isEmail } from '../utils/email.util'
-import { logger } from 'better-auth'
 
 @Injectable({
   providedIn: 'root',
@@ -18,7 +15,7 @@ export class AuthService {
   /**
    * Current authenticated session
    */
-  readonly session = signal<AuthSession | null>(null)
+  readonly session = signal<{ user: User; session: Session3 } | null>(null)
 
   /**
    * Whether there is an active session
@@ -29,13 +26,13 @@ export class AuthService {
    * Observable stream of the session state. Emits only when the session is resolved (not pending).
    * This is intended for guards and other async operations.
    */
-  readonly sessionState$!: Observable<AuthSession | null>
+  readonly sessionState$!: Observable<{ user: User; session: Session3 } | null>
 
   constructor() {
     this.session$()
 
     const useSession$ = new Observable<{
-      data: AuthSession | null
+      data: { user: User; session: Session3 } | null
       error: BetterFetchError | null
       isPending: boolean
     }>((subscriber) => {
@@ -81,24 +78,13 @@ export class AuthService {
     })
   }
 
-  /**
-   * pass either email or username to sign in. Needs username plugin enabled to use username.
-   * @param data : { email?: string; username?: string; password: string; rememberMe?: boolean }
-   */
-  signIn(data: { login: string; password: string; rememberMe?: boolean }) {
-    if (isEmail(data.login)) {
-      return this.signInEmail({ email: data.login, password: data.password, rememberMe: data.rememberMe })
-    } else {
-      return this.signInUsername({ username: data.login, password: data.password, rememberMe: data.rememberMe })
-    }
-  }
-
-  signInEmail(data: { email: string; password: string; rememberMe?: boolean }) {
-    return defer(() => this.client.signIn.email(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
-  }
-
-  signInUsername(data: { username: string; password: string; rememberMe?: boolean }) {
-    return defer(() => (this.client as any).signIn.username(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
+  signInEmail(data: { email: string; password: string; rememberMe?: boolean }): Observable<{
+    user: User
+    session: Session3
+  }> {
+    return defer(() => this.client.signIn.email(data)).pipe(
+      switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
+    )
   }
 
   /**
@@ -107,47 +93,81 @@ export class AuthService {
    * Parameters username and displayUsername can be used if the username's plugin is enabled.
    * @param data
    */
-  signUpEmail(data: { name: string; email: string; password: string; username: string; displayUsername?: string }) {
-    return defer(() => this.client.signUp.email(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
+  signUpEmail(data: {
+    name: string
+    email: string
+    password: string
+    username: string
+    displayUsername?: string
+  }): Observable<{
+    user: User
+    session: Session3
+  }> {
+    return defer(() => this.client.signUp.email(data)).pipe(
+      switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
+    )
   }
 
-  signInProvider(provider: Provider) {
-    return defer(() => this.client.signIn.social({ provider })).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
+  signInProvider(provider: Provider): Observable<{
+    user: User
+    session: Session3
+  }> {
+    return defer(() => this.client.signIn.social({ provider })).pipe(
+      switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
+    )
   }
 
-  signOut() {
+  signOut(): Observable<null> {
     return defer(() => this.client.signOut()).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s === null))))
   }
 
-  sendVerificationEmail(data: { email: string; callbackURL?: string }) {
-    return defer(() => this.client.sendVerificationEmail(data))
+  sendVerificationEmail(data: { email: string; callbackURL?: string }): Observable<{ status: boolean }> {
+    return defer(() => this.client.sendVerificationEmail(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 
-  requestPasswordReset(data: { email: string; redirectTo?: string }) {
-    return defer(() => this.client.requestPasswordReset(data))
+  requestPasswordReset(data: { email: string; redirectTo?: string }): Observable<{ status: boolean }> {
+    return defer(() => this.client.requestPasswordReset(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 
-  resetPassword(data: { newPassword: string; token: string }) {
-    return defer(() => this.client.resetPassword(data))
+  resetPassword(data: { newPassword: string; token: string }): Observable<{ status: boolean }> {
+    return defer(() => this.client.resetPassword(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 
-  changePassword(data: { currentPassword: string; newPassword: string; revokeOtherSessions?: boolean }) {
-    return defer(() => this.client.changePassword(data))
+  changePassword(data: { currentPassword: string; newPassword: string; revokeOtherSessions?: boolean }): Observable<{
+    token: string
+    user: User
+  }> {
+    return defer(() => this.client.changePassword(data)).pipe(
+      map((data) => this.mainService.mapData<{ token: string; user: User }>(data as any)),
+    )
   }
 
-  changeEmail(data: { newEmail: string; callbackURL?: string }) {
-    return defer(() => this.client.changeEmail(data))
+  changeEmail(data: { newEmail: string; callbackURL?: string }): Observable<{ status: boolean }> {
+    return defer(() => this.client.changeEmail(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 
-  updateUser(data: { name?: string; image?: string; username?: string; displayUsername?: string }) {
-    return defer(() => this.client.updateUser(data))
+  updateUser(data: {
+    name?: string
+    image?: string
+    username?: string
+    displayUsername?: string
+  }): Observable<{ status: boolean }> {
+    return defer(() => this.client.updateUser(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 
-  isUsernameAvailable(data: { username: string }) {
-    return defer(() => (this.client as any).isUsernameAvailable(data))
-  }
-
-  deleteUser(data: { callbackURL?: string; token?: string; password?: string }) {
-    return defer(() => this.client.deleteUser(data)).pipe(tap(() => this.sessionState$.pipe(filter((s) => s === null))))
+  deleteUser(data: { callbackURL?: string; token?: string; password?: string }): Observable<null> {
+    return defer(() => this.client.deleteUser(data)).pipe(
+      switchMap(() => this.sessionState$.pipe(filter((s) => s === null))),
+    )
   }
 }

@@ -30,6 +30,8 @@ export class AccountService {
   }
 
   unlinkAccount(data: { providerId: Provider; accountId: string }): Observable<{ status: boolean }> {
-    return defer(() => this.client.unlinkAccount(data)).pipe(map((data) => this.mainService.mapData<{ status: boolean }>(data as any)))
+    return defer(() => this.client.unlinkAccount(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
   }
 }

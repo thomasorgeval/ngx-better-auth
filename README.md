@@ -8,7 +8,7 @@
 ![angular](https://img.shields.io/badge/angular-20+-dd0031?logo=angular&logoColor=white)
 ![better-auth](https://img.shields.io/badge/better--auth-1.3.7+-blueviolet)
 
-An **Angular 20+ integration for [Better Auth](https://github.com/better-auth/better-auth)**.  
+An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better-auth)**.  
 Provides reactive session handling with **signals**, clean **DI provider setup** with **observables**, and modern **guards**.
 
 ---
@@ -49,7 +49,9 @@ export const appConfig: ApplicationConfig = {
 
 ## 🧩 Different services
 
-You can inject different services depending on your needs:
+You can inject different services depending on your needs.  
+**AuthService** provides the core Better Auth client methods (login, logout, register, e.g.).  
+The full list of methods is available at the end of this README.
 
 ### Global services
 - `AuthService`
@@ -58,6 +60,7 @@ You can inject different services depending on your needs:
 
 ### Plugin services
 Authentication:
+- `UsernameService`
 - `TwoFactorService`
 - `PasskeyService`
 - `GenericOauthService`
@@ -108,7 +111,7 @@ This library ships with guards to quickly set up route protection.
 ### Usage in routes
 ```ts
 import { Routes } from '@angular/router'
-import { canActivate, redirectLoggedInTo, redirectUnauthorizedTo, hasRole } from 'ngx-better-auth/guards'
+import { canActivate, redirectLoggedInTo, redirectUnauthorizedTo, hasRole } from 'ngx-better-auth'
 
 export const routes: Routes = [
   {
@@ -128,3 +131,8 @@ export const routes: Routes = [
   }
 ]
 ```
+
+## 📋 Full list of AuthService methods
+
+### AuthService
+
