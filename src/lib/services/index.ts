@@ -8,6 +8,7 @@ export * from './generic-oauth.service'
 export * from './email-otp.service'
 export * from './one-tap.service'
 export * from './magic-link.service'
+export * from './username.service'
 
 export * from './admin.service'
 export * from './organization.service'
