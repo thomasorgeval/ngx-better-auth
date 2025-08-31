@@ -10,8 +10,5 @@ export interface Session2 extends Session {
   impersonatedBy?: string
   ipAddress?: string | null
   userAgent?: string | null
-}
-
-export interface Session3 extends Session2 {
   updatedAt: Date
 }

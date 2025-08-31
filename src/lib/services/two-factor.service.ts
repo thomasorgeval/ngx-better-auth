@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../utils/validate-plugin'
 import { MainService } from './main.service'
-import { Session3, User } from '../models'
+import { Session2, User } from '../models'
 
 @Injectable({ providedIn: 'root' })
 export class TwoFactorService {
@@ -65,13 +65,13 @@ export class TwoFactorService {
 
   verifyBackupCode(data: { code: string; disableSession?: boolean; trustDevice?: boolean }): Observable<{
     user: User
-    session: Session3
+    session: Session2
   }> {
     return defer(() => this.twoFactor.verifyBackupCode(data)).pipe(
       map((data) =>
         this.mainService.mapData<{
           user: User
-          session: Session3
+          session: Session2
         }>(data as any),
       ),
     )
