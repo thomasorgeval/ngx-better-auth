@@ -1,18 +1,16 @@
 import { computed, inject, Injectable, signal } from '@angular/core'
-import { BETTER_AUTH_CONFIG_TOKEN } from '../providers'
-import { BetterFetchError, createAuthClient } from 'better-auth/client'
+import { BetterFetchError } from 'better-auth/client'
 import { AuthSession, Provider } from '../models'
-import { defer, filter, map, Observable, shareReplay } from 'rxjs'
+import { defer, filter, map, Observable, shareReplay, switchMap, tap } from 'rxjs'
+import { MainService } from './main.service'
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly config = inject(BETTER_AUTH_CONFIG_TOKEN)
+  private readonly mainService = inject(MainService)
 
-  readonly authClient = createAuthClient({
-    ...this.config,
-  })
+  private readonly client = this.mainService.authClient
 
   /**
    * Current authenticated session
@@ -38,7 +36,7 @@ export class AuthService {
       error: BetterFetchError | null
       isPending: boolean
     }>((subscriber) => {
-      this.authClient.useSession.subscribe((value) => subscriber.next(value))
+      this.client.useSession.subscribe((value) => subscriber.next(value))
     })
 
     this.sessionState$ = useSession$.pipe(
@@ -63,7 +61,7 @@ export class AuthService {
   }
 
   private session$() {
-    this.authClient.useSession.subscribe((session) => {
+    this.client.useSession.subscribe((session) => {
       if (session.isPending) {
         this.session.set(null)
         return
@@ -81,18 +79,18 @@ export class AuthService {
   }
 
   signInEmail(data: { email: string; password: string; rememberMe?: boolean }) {
-    return defer(() => this.authClient.signIn.email(data))
+    return defer(() => this.client.signIn.email(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
   signUpEmail(data: { name: string; email: string; password: string }) {
-    return defer(() => this.authClient.signUp.email(data))
+    return defer(() => this.client.signUp.email(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
   signInProvider(provider: Provider) {
-    return defer(() => this.authClient.signIn.social({ provider }))
+    return defer(() => this.client.signIn.social({ provider })).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
   signOut() {
-    return defer(() => this.authClient.signOut())
+    return defer(() => this.client.signOut()).pipe(tap(() => this.session.set(null)))
   }
 }

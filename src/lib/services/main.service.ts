@@ -1,0 +1,14 @@
+import { inject, Injectable } from '@angular/core'
+import { BETTER_AUTH_CONFIG_TOKEN } from '../providers'
+import { createAuthClient } from 'better-auth/client'
+
+@Injectable({
+  providedIn: 'root',
+})
+export class MainService {
+  private readonly config = inject(BETTER_AUTH_CONFIG_TOKEN)
+
+  readonly authClient = createAuthClient({
+    ...this.config,
+  })
+}

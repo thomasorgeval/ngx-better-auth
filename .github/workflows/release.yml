@@ -98,37 +98,50 @@ jobs:
           
             # Récupère les commits avec auteur, en excluant les commits de release
             COMMITS_FOUND=false
-            git log --pretty=format:"%s|%an" --no-merges ${PREVIOUS_TAG}..HEAD | \
+            git log --pretty=format:"%s|%an|%ae" --no-merges ${PREVIOUS_TAG}..HEAD | \
               grep -v "^chore: release\|^release:\|^bump version\|^version bump" | \
-              while IFS='|' read -r commit author; do
+              while IFS='|' read -r commit author email; do
                 # Évite les lignes vides
                 if [ ! -z "$commit" ]; then
                   COMMITS_FOUND=true
+          
+                  # Extrait le username GitHub depuis l'email ou nettoie le nom
+                  if [[ $email == *"@users.noreply.github.com" ]]; then
+                    # Extrait le username depuis l'email noreply GitHub
+                    github_username=$(echo $email | sed 's/@users.noreply.github.com//' | sed 's/^[0-9]*+//')
+                  elif [[ $email == *"@github.com" ]] || [[ $email == *"github"* ]]; then
+                    # Pour les emails GitHub, utilise la partie avant @
+                    github_username=$(echo $email | cut -d'@' -f1)
+                  else
+                    # Sinon, nettoie le nom (supprime espaces et caractères spéciaux)
+                    github_username=$(echo $author | tr '[:upper:]' '[:lower:]' | sed 's/ //g' | sed 's/[^a-z0-9-]//g')
+                  fi
+          
                   # Catégorise les commits selon leur préfixe
                   if [[ $commit == feat* ]] || [[ $commit == feature* ]]; then
-                    echo "* ✨ $commit by @$author" >> changelog.md
+                    echo "* ✨ $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == fix* ]]; then
-                    echo "* 🐛 $commit by @$author" >> changelog.md
+                    echo "* 🐛 $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == docs* ]]; then
-                    echo "* 📚 $commit by @$author" >> changelog.md
+                    echo "* 📚 $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == style* ]]; then
-                    echo "* 💄 $commit by @$author" >> changelog.md
+                    echo "* 💄 $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == refactor* ]]; then
-                    echo "* ♻️ $commit by @$author" >> changelog.md
+                    echo "* ♻️ $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == perf* ]]; then
-                    echo "* ⚡ $commit by @$author" >> changelog.md
+                    echo "* ⚡ $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == test* ]]; then
-                    echo "* 🧪 $commit by @$author" >> changelog.md
+                    echo "* 🧪 $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == chore* ]]; then
-                    echo "* 🔧 $commit by @$author" >> changelog.md
+                    echo "* 🔧 $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == ci* ]]; then
-                    echo "* 👷 $commit by @$author" >> changelog.md
+                    echo "* 👷 $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == build* ]]; then
-                    echo "* 🏗️ $commit by @$author" >> changelog.md
+                    echo "* 🏗️ $commit by **@$github_username**" >> changelog.md
                   elif [[ $commit == revert* ]]; then
-                    echo "* ⏪ $commit by @$author" >> changelog.md
+                    echo "* ⏪ $commit by **@$github_username**" >> changelog.md
                   else
-                    echo "* 📝 $commit by @$author" >> changelog.md
+                    echo "* 📝 $commit by **@$github_username**" >> changelog.md
                   fi
                 fi
               done
@@ -175,11 +188,13 @@ jobs:
                 fi
               done || echo "* 🙏 Contributors information unavailable" >> changelog.md
           else
-            git shortlog -sn 2>/dev/null | \
+            git shortlog -sn ${PREVIOUS_TAG}..HEAD 2>/dev/null | \
               head -5 | \
               while read count author; do
                 if [ ! -z "$author" ]; then
-                  echo "* 🙏 **$author** ($count commits)" >> changelog.md
+                  # Nettoie le nom pour créer un username
+                  github_username=$(echo $author | tr '[:upper:]' '[:lower:]' | sed 's/ //g' | sed 's/[^a-z0-9-]//g')
+                  echo "* 🙏 **@$github_username** ($count commits)" >> changelog.md
                 fi
               done || echo "* 🙏 Contributors information unavailable" >> changelog.md
           fi

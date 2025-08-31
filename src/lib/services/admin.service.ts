@@ -1,16 +1,16 @@
 import { inject, Injectable } from '@angular/core'
 import { defer } from 'rxjs'
-import { AuthService } from './auth.service'
 import { validateAdminPlugin } from '../utils/validate-plugin'
+import { MainService } from './main.service'
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
-  private readonly authService = inject(AuthService)
+  private readonly mainService = inject(MainService)
 
   admin: any
 
   constructor() {
-    const client = this.authService.authClient as { admin?: any }
+    const client = this.mainService.authClient as { admin?: any }
     validateAdminPlugin(client, 'admin')
     this.admin = client.admin
   }

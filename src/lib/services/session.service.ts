@@ -1,12 +1,12 @@
 import { inject, Injectable } from '@angular/core'
-import { AuthService } from './auth.service'
 import { defer } from 'rxjs'
+import { MainService } from './main.service'
 
 @Injectable({ providedIn: 'root' })
 export class SessionService {
-  private readonly authService = inject(AuthService)
+  private readonly mainService = inject(MainService)
 
-  private readonly client = this.authService.authClient
+  private readonly client = this.mainService.authClient
 
   listSessions() {
     return defer(() => this.client.listSessions())
