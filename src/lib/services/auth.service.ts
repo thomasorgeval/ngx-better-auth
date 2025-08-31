@@ -1,8 +1,9 @@
 import { computed, inject, Injectable, signal } from '@angular/core'
 import { BetterFetchError } from 'better-auth/client'
-import { AuthSession, Provider } from '../models'
+import { AuthSession } from '../models'
 import { defer, filter, map, Observable, shareReplay, switchMap, tap } from 'rxjs'
 import { MainService } from './main.service'
+import { SocialProviderList } from 'better-auth/social-providers'
 
 @Injectable({
   providedIn: 'root',
@@ -86,11 +87,27 @@ export class AuthService {
     return defer(() => this.client.signUp.email(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
-  signInProvider(provider: Provider) {
+  signInProvider(provider: SocialProviderList[number]) {
     return defer(() => this.client.signIn.social({ provider })).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
   signOut() {
-    return defer(() => this.client.signOut()).pipe(tap(() => this.session.set(null)))
+    return defer(() => this.client.signOut()).pipe(tap(() => this.sessionState$.pipe(filter((s) => s === null))))
+  }
+
+  sendVerificationEmail(data: { email: string; callbackURL?: string }) {
+    return defer(() => this.client.sendVerificationEmail(data))
+  }
+
+  requestPasswordReset(data: { email: string; redirectTo?: string }) {
+    return defer(() => this.client.requestPasswordReset(data))
+  }
+
+  resetPassword(data: { newPassword: string; token: string }) {
+    return defer(() => this.client.resetPassword(data))
+  }
+
+  changePassword(data: { currentPassword: string; newPassword: string; revokeOtherSessions?: boolean }) {
+    return defer(() => this.client.changePassword(data))
   }
 }
