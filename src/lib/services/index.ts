@@ -1,5 +1,6 @@
 export * from './auth.service'
 export * from './session.service'
+export * from './account.service'
 
 export * from './two-factor.service'
 export * from './passkey.service'

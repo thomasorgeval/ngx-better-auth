@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core'
 import { BetterFetchError } from 'better-auth/client'
-import { AuthSession } from '../models'
+import { AuthSession, Provider } from '../models'
 import { defer, filter, map, Observable, shareReplay, switchMap, tap } from 'rxjs'
 import { MainService } from './main.service'
 import { SocialProviderList } from 'better-auth/social-providers'
@@ -83,11 +83,17 @@ export class AuthService {
     return defer(() => this.client.signIn.email(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
-  signUpEmail(data: { name: string; email: string; password: string }) {
+  /**
+   * Sign up a new user using email and password.
+   *
+   * Parameters username and displayUsername can be used if the username's plugin is enabled.
+   * @param data
+   */
+  signUpEmail(data: { name: string; email: string; password: string; username: string; displayUsername?: string }) {
     return defer(() => this.client.signUp.email(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
-  signInProvider(provider: SocialProviderList[number]) {
+  signInProvider(provider: Provider) {
     return defer(() => this.client.signIn.social({ provider })).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
@@ -109,5 +115,21 @@ export class AuthService {
 
   changePassword(data: { currentPassword: string; newPassword: string; revokeOtherSessions?: boolean }) {
     return defer(() => this.client.changePassword(data))
+  }
+
+  changeEmail(data: { newEmail: string; callbackURL?: string }) {
+    return defer(() => this.client.changeEmail(data))
+  }
+
+  updateUser(data: { name?: string; image?: string; username?: string; displayUsername?: string }) {
+    return defer(() => this.client.updateUser(data))
+  }
+
+  isUsernameAvailable(data: { username: string }) {
+    return defer(() => (this.client as any).isUsernameAvailable(data))
+  }
+
+  deleteUser(data: { callbackURL?: string; token?: string; password?: string }) {
+    return defer(() => this.client.deleteUser(data)).pipe(tap(() => this.sessionState$.pipe(filter((s) => s === null))))
   }
 }
