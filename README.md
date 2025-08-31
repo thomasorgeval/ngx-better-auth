@@ -4,7 +4,6 @@
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/ngx-better-auth)
 ![license](https://img.shields.io/npm/l/ngx-better-auth)
 ![downloads](https://img.shields.io/npm/dm/ngx-better-auth)
-![GitHub stars](https://img.shields.io/github/stars/thomasorgeval/ngx-better-auth?style=flat)
 
 ![angular](https://img.shields.io/badge/angular-20+-dd0031?logo=angular&logoColor=white)
 ![better-auth](https://img.shields.io/badge/better--auth-1.3.7+-blueviolet)
@@ -37,14 +36,15 @@ First, configure your Better Auth client in your application:
 // app.config.ts
 import { ApplicationConfig } from '@angular/core'
 import { provideBetterAuth } from 'ngx-better-auth'
+import { environment } from './environments/environment'
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBetterAuth({
-      baseURL: 'http://localhost:3000', // your API endpoint
+      baseURL: environment.apiUrl, // it works also with proxy config
     })
   ]
-};
+}
 ```
 
 ## 🧩 Different services

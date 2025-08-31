@@ -79,8 +79,26 @@ export class AuthService {
     })
   }
 
+  /**
+   * pass either email or username to sign in. Needs username plugin enabled to use username.
+   * @param data : { email?: string; username?: string; password: string; rememberMe?: boolean }
+   */
+  signIn(data: { email?: string; username?: string; password: string; rememberMe?: boolean }) {
+    if (data.email) {
+      return this.signInEmail({ email: data.email, password: data.password, rememberMe: data.rememberMe })
+    } else if (data.username) {
+      return this.signInUsername({ username: data.username, password: data.password, rememberMe: data.rememberMe })
+    } else {
+      throw new Error('Either email or username must be provided')
+    }
+  }
+
   signInEmail(data: { email: string; password: string; rememberMe?: boolean }) {
     return defer(() => this.client.signIn.email(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
+  }
+
+  signInUsername(data: { username: string; password: string; rememberMe?: boolean }) {
+    return defer(() => (this.client as any).signIn.username(data)).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
   /**
@@ -98,7 +116,7 @@ export class AuthService {
   }
 
   signOut() {
-    return defer(() => this.client.signOut()).pipe(tap(() => this.sessionState$.pipe(filter((s) => s === null))))
+    return defer(() => this.client.signOut()).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s === null))))
   }
 
   sendVerificationEmail(data: { email: string; callbackURL?: string }) {
