@@ -1,4 +1,4 @@
-export function validateAdminPlugin(client: any, property: string) {
+export function validatePlugin(client: any, property: string) {
   if (!client) {
     throw new Error('AuthClient is not initialized.')
   }

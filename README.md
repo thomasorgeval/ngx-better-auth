@@ -56,6 +56,15 @@ You can inject different services depending on your needs:
 - `SessionService`
 
 ### Plugin services
+Authentication:
+- `TwoFactorService`
+- `PasskeyService`
+- `GenericOauthService`
+- `EmailOtpService`
+- `OneTapService`
+- `MagicLinkService`
+
+Authorization:
 - `AdminService`
 - `OrganizationService`
 
