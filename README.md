@@ -1,10 +1,13 @@
 # ngx-better-auth
 
-![npm](https://img.shields.io/npm/v/ngx-better-auth?style=flat-square)
-![npm bundle size](https://img.shields.io/bundlephobia/minzip/ngx-better-auth?style=flat-square)
-![license](https://img.shields.io/npm/l/ngx-better-auth?style=flat-square)
-![angular](https://img.shields.io/badge/angular-20+-dd0031?logo=angular&logoColor=white&style=flat-square)
-![better-auth](https://img.shields.io/badge/better--auth-1.3.7+-blueviolet?style=flat-square)
+![npm](https://img.shields.io/npm/v/ngx-better-auth)
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/ngx-better-auth)
+![license](https://img.shields.io/npm/l/ngx-better-auth)
+![downloads](https://img.shields.io/npm/dm/ngx-better-auth)
+![GitHub stars](https://img.shields.io/github/stars/thomasorgeval/ngx-better-auth?style=flat)
+
+![angular](https://img.shields.io/badge/angular-20+-dd0031?logo=angular&logoColor=white)
+![better-auth](https://img.shields.io/badge/better--auth-1.3.7+-blueviolet)
 
 An **Angular 20+ integration for [Better Auth](https://github.com/better-auth/better-auth)**.  
 Provides reactive session handling with **signals**, clean **DI provider setup** with **observables**, and modern **guards**.
@@ -48,11 +51,11 @@ export const appConfig: ApplicationConfig = {
 
 You can inject different services depending on your needs:
 
-### Global services:
+### Global services
+- `AuthService`
 - `SessionService`
-- `SignInService`
 
-### Plugin services:
+### Plugin services
 - `AdminService`
 - `OrganizationService`
 
@@ -67,7 +70,20 @@ You can inject different services depending on your needs:
 import { AuthService } from "ngx-better-auth"
 import { inject } from "@angular/core"
 
-private readonly authService = inject(AuthService)
+@Component({
+    // ...
+})
+export class MyComponent {
+    private readonly authService = inject(AuthService)
+
+    get isLoggedIn() {
+        return this.authService.isLoggedIn()
+    }
+
+    get userName() {
+        return this.authService.session()?.user.name
+    }
+}
 ```
 
 ## 🛡️ Guards

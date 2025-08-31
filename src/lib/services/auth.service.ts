@@ -1,8 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core'
 import { BETTER_AUTH_CONFIG_TOKEN } from '../providers'
 import { BetterFetchError, createAuthClient } from 'better-auth/client'
-import { AuthSession } from '../models'
-import { filter, map, Observable, shareReplay } from 'rxjs'
+import { AuthSession, Provider } from '../models'
+import { defer, filter, map, Observable, shareReplay } from 'rxjs'
 
 @Injectable({
   providedIn: 'root',
@@ -58,7 +58,7 @@ export class AuthService {
    * Ideal for route guards.
    * @returns An Observable that emits true for an active session, and false otherwise.
    */
-  isAuthenticated(): Observable<boolean> {
+  isLoggedIn$(): Observable<boolean> {
     return this.sessionState$.pipe(map((session) => !!session?.session))
   }
 
@@ -78,5 +78,17 @@ export class AuthService {
       }
       this.session.set(session.data)
     })
+  }
+
+  signInEmail(data: { email: string; password: string; rememberMe?: boolean }) {
+    return defer(() => this.authClient.signIn.email(data))
+  }
+
+  signUpEmail(data: { name: string; email: string; password: string }) {
+    return defer(() => this.authClient.signUp.email(data))
+  }
+
+  signInProvider(provider: Provider) {
+    return defer(() => this.authClient.signIn.social({ provider }))
   }
 }

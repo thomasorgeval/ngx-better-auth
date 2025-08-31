@@ -16,11 +16,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
 
       - name: Parse version and determine release type
         id: version_info
@@ -87,31 +82,52 @@ jobs:
             echo "## 📋 What's Changed" >> changelog.md
             echo "" >> changelog.md
           
-            # Récupère les commits entre les deux tags
-            git log --pretty=format:"%s" --no-merges ${PREVIOUS_TAG}..${TAG_NAME} | while read commit; do
-              # Catégorise les commits selon leur préfixe
-              if [[ $commit == feat* ]] || [[ $commit == feature* ]]; then
-                echo "* ✨ $commit" >> changelog.md
-              elif [[ $commit == fix* ]]; then
-                echo "* 🐛 $commit" >> changelog.md
-              elif [[ $commit == docs* ]]; then
-                echo "* 📚 $commit" >> changelog.md
-              elif [[ $commit == style* ]]; then
-                echo "* 💄 $commit" >> changelog.md
-              elif [[ $commit == refactor* ]]; then
-                echo "* ♻️ $commit" >> changelog.md
-              elif [[ $commit == perf* ]]; then
-                echo "* ⚡ $commit" >> changelog.md
-              elif [[ $commit == test* ]]; then
-                echo "* 🧪 $commit" >> changelog.md
-              elif [[ $commit == chore* ]]; then
-                echo "* 🔧 $commit" >> changelog.md
-              elif [[ $commit == ci* ]]; then
-                echo "* 👷 $commit" >> changelog.md
-              else
-                echo "* 📝 $commit" >> changelog.md
-              fi
-            done
+            # Utilise un fichier temporaire pour éviter les problèmes de sous-shell
+            TEMP_FILE=$(mktemp)
+          
+            # Récupère les commits avec auteur, en excluant les commits de release
+            git log --pretty=format:"%s|%an" --no-merges ${PREVIOUS_TAG}..${TAG_NAME} | \
+              grep -v "^chore: release\|^release:\|^bump version\|^version bump" > "$TEMP_FILE"
+          
+            # Vérifie si on a des commits à traiter
+            if [ -s "$TEMP_FILE" ]; then
+              while IFS='|' read -r commit author; do
+                # Évite les lignes vides
+                if [ ! -z "$commit" ]; then
+                  # Catégorise les commits selon leur préfixe
+                  if [[ $commit == feat* ]] || [[ $commit == feature* ]]; then
+                    echo "* ✨ $commit by @$author" >> changelog.md
+                  elif [[ $commit == fix* ]]; then
+                    echo "* 🐛 $commit by @$author" >> changelog.md
+                  elif [[ $commit == docs* ]]; then
+                    echo "* 📚 $commit by @$author" >> changelog.md
+                  elif [[ $commit == style* ]]; then
+                    echo "* 💄 $commit by @$author" >> changelog.md
+                  elif [[ $commit == refactor* ]]; then
+                    echo "* ♻️ $commit by @$author" >> changelog.md
+                  elif [[ $commit == perf* ]]; then
+                    echo "* ⚡ $commit by @$author" >> changelog.md
+                  elif [[ $commit == test* ]]; then
+                    echo "* 🧪 $commit by @$author" >> changelog.md
+                  elif [[ $commit == chore* ]]; then
+                    echo "* 🔧 $commit by @$author" >> changelog.md
+                  elif [[ $commit == ci* ]]; then
+                    echo "* 👷 $commit by @$author" >> changelog.md
+                  elif [[ $commit == build* ]]; then
+                    echo "* 🏗️ $commit by @$author" >> changelog.md
+                  elif [[ $commit == revert* ]]; then
+                    echo "* ⏪ $commit by @$author" >> changelog.md
+                  else
+                    echo "* 📝 $commit by @$author" >> changelog.md
+                  fi
+                fi
+              done < "$TEMP_FILE"
+            else
+              echo "* 🔧 Version maintenance and updates" >> changelog.md
+            fi
+          
+            # Nettoie le fichier temporaire
+            rm "$TEMP_FILE"
           else
             echo "## 📋 What's Changed" >> changelog.md
             echo "" >> changelog.md
@@ -120,43 +136,83 @@ jobs:
           
           echo "" >> changelog.md
           
-          # Ajoute des métriques
+          # Ajoute des métriques (en excluant les commits de release)
           echo "## 📊 Release Stats" >> changelog.md
           echo "" >> changelog.md
           
           if [ ! -z "$PREVIOUS_TAG" ]; then
-            COMMIT_COUNT=$(git rev-list --count ${PREVIOUS_TAG}..${TAG_NAME})
+            # Compte les commits en excluant ceux de release
+            COMMIT_COUNT=$(git log --oneline --no-merges ${PREVIOUS_TAG}..${TAG_NAME} | \
+              grep -v "chore: release\|release:\|bump version\|version bump" | wc -l)
             echo "* 📦 **$COMMIT_COUNT commits** since $PREVIOUS_TAG" >> changelog.md
           fi
           
           TOTAL_COMMITS=$(git rev-list --count HEAD)
           echo "* 🔢 **$TOTAL_COMMITS total commits**" >> changelog.md
           
-          CONTRIBUTORS=$(git shortlog -sn ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | wc -l)
+          # Compte les contributeurs uniques (en excluant les commits de release)
+          TEMP_CONTRIBUTORS=$(mktemp)
+          git log --pretty=format:"%an" --no-merges ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
+            grep -v -f <(git log --pretty=format:"%an" --no-merges ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} --grep="chore: release\|release:\|bump version\|version bump") | \
+            sort -u > "$TEMP_CONTRIBUTORS" 2>/dev/null || \
+            git shortlog -sn ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
+            grep -v -E "(chore: release|release:|bump version|version bump)" | wc -l > "$TEMP_CONTRIBUTORS"
+          
+          CONTRIBUTORS=$(cat "$TEMP_CONTRIBUTORS" | wc -l)
           echo "* 👥 **$CONTRIBUTORS contributors** in this release" >> changelog.md
+          rm "$TEMP_CONTRIBUTORS"
           
           echo "" >> changelog.md
           
-          # Ajoute la liste des contributeurs
+          # Ajoute la liste des contributeurs (version améliorée)
           echo "## 👨‍💻 Contributors" >> changelog.md
           echo "" >> changelog.md
+          
+          # Récupère les contributeurs uniques avec leur nombre de commits
           git shortlog -sn ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
-            sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' | \
-            sed 's/^/* 🙏 /' >> changelog.md
+            while read count author; do
+              # Vérifie si l'auteur a des commits non-release
+              NON_RELEASE_COMMITS=$(git log --author="$author" --oneline --no-merges ${PREVIOUS_TAG:-$(git rev-list --max-parents=0 HEAD)}..${TAG_NAME} | \
+                grep -v "chore: release\|release:\|bump version\|version bump" | wc -l)
+          
+              if [ "$NON_RELEASE_COMMITS" -gt 0 ]; then
+                if [ "$NON_RELEASE_COMMITS" -eq 1 ]; then
+                  echo "* 🙏 **$author** ($NON_RELEASE_COMMITS commit)" >> changelog.md
+                else
+                  echo "* 🙏 **$author** ($NON_RELEASE_COMMITS commits)" >> changelog.md
+                fi
+              fi
+            done
           
           echo "" >> changelog.md
+          
+          # Ajoute un lien vers la comparaison complète
+          if [ ! -z "$PREVIOUS_TAG" ]; then
+            echo "## 🔗 Full Changelog" >> changelog.md
+            echo "" >> changelog.md
+            echo "**[View full diff](${{ github.server_url }}/${{ github.repository }}/compare/${PREVIOUS_TAG}...${TAG_NAME})**" >> changelog.md
+            echo "" >> changelog.md
+          fi
+          
           echo "---" >> changelog.md
           echo "*Generated automatically by GitHub Actions* 🤖" >> changelog.md
           
-          # Affiche le changelog généré
+          # Affiche le changelog généré pour debug
           echo "Changelog généré:"
           cat changelog.md
+          
+          # Sauvegarde le changelog pour le step suivant
+          {
+            echo 'CHANGELOG<<EOF'
+            cat changelog.md
+            echo EOF
+          } >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version_info.outputs.tag_name }}
-          name: "${{ steps.version_info.outputs.release_type }} ${{ steps.version_info.outputs.tag_name }}"
+          name: ${{ steps.version_info.outputs.tag_name }}
           body_path: changelog.md
           prerelease: ${{ steps.version_info.outputs.is_prerelease }}
           make_latest: ${{ steps.version_info.outputs.is_prerelease == 'false' }}

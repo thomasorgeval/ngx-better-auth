@@ -10,7 +10,7 @@ export function redirectUnauthorizedTo(commands: string[] = ['/login']): () => O
   return () => {
     const auth = inject(AuthService)
     const router = inject(Router)
-    return auth.isAuthenticated().pipe(map((isLoggedIn) => (isLoggedIn ? true : router.createUrlTree(commands))))
+    return auth.isLoggedIn$().pipe(map((isLoggedIn) => (isLoggedIn ? true : router.createUrlTree(commands))))
   }
 }
 
@@ -21,7 +21,7 @@ export function redirectLoggedInTo(commands: string[] = ['/']): () => Observable
   return () => {
     const auth = inject(AuthService)
     const router = inject(Router)
-    return auth.isAuthenticated().pipe(map((isLoggedIn) => (isLoggedIn ? router.createUrlTree(commands) : true)))
+    return auth.isLoggedIn$().pipe(map((isLoggedIn) => (isLoggedIn ? router.createUrlTree(commands) : true)))
   }
 }
 
