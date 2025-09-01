@@ -1,12 +1,14 @@
 import { inject, Injectable } from '@angular/core'
-import { defer, map, Observable } from 'rxjs'
+import { defer, filter, map, Observable, switchMap } from 'rxjs'
 import { validatePlugin } from '../utils/validate-plugin'
 import { MainService } from './main.service'
 import { Session2, User } from '../models'
+import { AuthService } from './auth.service'
 
 @Injectable({ providedIn: 'root' })
 export class TwoFactorService {
   private readonly mainService = inject(MainService)
+  private readonly authService = inject(AuthService)
 
   twoFactor: any
 
@@ -39,9 +41,12 @@ export class TwoFactorService {
     )
   }
 
-  verifyTotp(data: { code: string; trustDevice?: boolean }): Observable<{ status: boolean }> {
+  verifyTotp(data: { code: string; trustDevice?: boolean }): Observable<{
+    user: User
+    session: Session2
+  }> {
     return defer(() => this.twoFactor.verifyTotp(data)).pipe(
-      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+      switchMap(() => this.authService.sessionState$.pipe(filter((s) => s !== null))),
     )
   }
 
