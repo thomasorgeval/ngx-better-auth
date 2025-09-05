@@ -43,7 +43,7 @@ export function hasRole(
           return router.createUrlTree(redirectTo)
         }
 
-        const role = session?.user?.['role']
+        const role = (session?.user as any)?.['role']
         if (Array.isArray(role)) {
           if (role.some((r) => requiredRoles.includes(r))) {
             return true
