@@ -1,5 +1,7 @@
 # ngx-better-auth
 
+An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better-auth)**. Provides reactive session handling with **signals**, clean **DI provider setup** with **observables**, and modern **guards**.
+
 ![npm](https://img.shields.io/npm/v/ngx-better-auth)
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/ngx-better-auth)
 ![license](https://img.shields.io/npm/l/ngx-better-auth)
@@ -7,9 +9,6 @@
 
 ![angular](https://img.shields.io/badge/angular-20+-dd0031?logo=angular&logoColor=white)
 ![better-auth](https://img.shields.io/badge/better--auth-1.3.7+-blueviolet)
-
-An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better-auth)**.  
-Provides reactive session handling with **signals**, clean **DI provider setup** with **observables**, and modern **guards**.
 
 ---
 
@@ -37,11 +36,31 @@ First, configure your Better Auth client in your application:
 import { ApplicationConfig } from '@angular/core'
 import { provideBetterAuth } from 'ngx-better-auth'
 import { environment } from './environments/environment'
+import { adminClient, twoFactorClient, usernameClient } from 'better-auth/client/plugins'
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBetterAuth({
       baseURL: environment.apiUrl, // it works also with proxy config
+      basePath: '/auth',   // optional, default is '/api/auth'
+        
+      // Example with plugins
+      plugins: [
+        usernameClient(),
+        twoFactorClient({
+          onTwoFactorRedirect() {
+              window.location.href = '/two-factor-auth'
+          },
+        }),
+        adminClient({
+          ac: accessControl,
+          roles: {
+            admin,
+            moderator,
+            user,
+          },
+        }),
+      ],
     })
   ]
 }
@@ -50,28 +69,43 @@ export const appConfig: ApplicationConfig = {
 ## 🧩 Different services
 
 You can inject different services depending on your needs.  
-**AuthService** provides the core Better Auth client methods (login, logout, register, e.g.).  
-The full list of methods is available at the end of this README.
+**AuthService** provides the core Better Auth client methods (signIn, signOut, signUp, e.g.).  
+The full list of methods  is available at the end of this README.
 
-### Global services
-- `AuthService`
-- `SessionService`
-- `AccountService`
+## 🔌 Plugin compatibility
 
-### Plugin services
-Authentication:
-- `UsernameService`
-- `TwoFactorService`
-- `PasskeyService`
-- `GenericOauthService`
-- `EmailOtpService`
-- `OneTapService`
-- `MagicLinkService`
-- `UsernameService`
+### Authentication
+- ✅ Two Factor ➡️ `TwoFactorService`
+- ✅ Username ➡️ `UsernameService`
+- ❌ Anonymous
+- ❌ Phone Number
+- ✅ Magic Link ➡️ `MagicLinkService`
+- ✅ Email OTP ➡️ `EmailOtpService`
+- ✅ Passkey ➡️ `PasskeyService`
+- ✅ Generic OAuth ➡️ `GenericOauthService`
+- ✅ One Tap ➡️ `OneTapService`
+- ❌ Sign In With Ethereum
 
-Authorization:
-- `AdminService`
-- `OrganizationService`
+### Authorization
+- ✅ Admin ➡️ `AdminService`
+- ❌ API Key
+- ❌ MCP
+- ✅ Organization ➡️ `OrganizationService`
+
+### Enterprise
+
+- ❌ OIDC Provider
+- ❌ SSO
+
+### Utility
+
+- ❌ Bearer
+- ❌ Device Authorization
+- ❌ Captcha
+- ❌ Last Login Method
+- ❌ Multi Session
+- ❌ One Time Token
+- ❌ JWT
 
 ## 🔄 Real-time Session
 
@@ -135,4 +169,3 @@ export const routes: Routes = [
 ## 📋 Full list of AuthService methods
 
 ### AuthService
-

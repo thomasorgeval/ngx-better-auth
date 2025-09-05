@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { defer } from 'rxjs'
-import { validatePlugin } from '../utils/validate-plugin'
-import { MainService } from './main.service'
+import { validatePlugin } from '../../utils/validate-plugin'
+import { MainService } from '../main.service'
 
 @Injectable({ providedIn: 'root' })
 export class OneTapService {

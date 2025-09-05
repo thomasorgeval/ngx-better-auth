@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
 import { defer, filter, switchMap } from 'rxjs'
-import { MainService } from './main.service'
-import { validatePlugin } from '../utils/validate-plugin'
-import { AuthService } from './auth.service'
+import { MainService } from '../main.service'
+import { validatePlugin } from '../../utils/validate-plugin'
+import { AuthService } from '../auth.service'
 
 @Injectable({ providedIn: 'root' })
 export class GenericOauthService {

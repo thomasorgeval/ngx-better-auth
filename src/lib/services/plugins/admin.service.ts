@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
-import { validatePlugin } from '../utils/validate-plugin'
-import { MainService } from './main.service'
-import { Session2, User } from '../models'
+import { validatePlugin } from '../../utils/validate-plugin'
+import { MainService } from '../main.service'
+import type { Session, User } from 'better-auth'
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -59,9 +59,9 @@ export class AdminService {
     )
   }
 
-  listUserSessions(data: { userId: string }): Observable<{ sessions: Session2[] }> {
+  listUserSessions(data: { userId: string }): Observable<{ sessions: Session[] }> {
     return defer(() => this.admin.listUserSessions(data)).pipe(
-      map((data: any) => this.mainService.mapData<{ sessions: Session2[] }>(data)),
+      map((data: any) => this.mainService.mapData<{ sessions: Session[] }>(data)),
     )
   }
 
@@ -77,9 +77,9 @@ export class AdminService {
     )
   }
 
-  impersonateUser(data: { userId: string }): Observable<{ session: Session2; user: User }> {
+  impersonateUser(data: { userId: string }): Observable<{ session: Session; user: User }> {
     return defer(() => this.admin.impersonateUser(data)).pipe(
-      map((data: any) => this.mainService.mapData<{ session: Session2; user: User }>(data)),
+      map((data: any) => this.mainService.mapData<{ session: Session; user: User }>(data)),
     )
   }
 

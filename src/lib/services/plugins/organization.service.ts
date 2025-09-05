@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
-import { validatePlugin } from '../utils/validate-plugin'
-import { MainService } from './main.service'
-import { Invitation, Member, Member2, Organization } from '../models'
+import { validatePlugin } from '../../utils/validate-plugin'
+import { MainService } from '../main.service'
+import type { Organization, Member, Invitation } from 'better-auth/plugins/organization'
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
@@ -149,9 +149,9 @@ export class OrganizationService {
     return defer(() => this.organization.listMembers(data))
   }
 
-  removeMember(data: { memberIdOrEmail: string; organizationId?: string }): Observable<{ member: Member2 }> {
+  removeMember(data: { memberIdOrEmail: string; organizationId?: string }): Observable<{ member: Member }> {
     return defer(() => this.organization.removeMember(data)).pipe(
-      map((data) => this.mainService.mapData<{ member: Member2 }>(data as any)),
+      map((data) => this.mainService.mapData<{ member: Member }>(data as any)),
     )
   }
 
@@ -159,9 +159,9 @@ export class OrganizationService {
     return defer(() => this.organization.updateMemberRoles(data))
   }
 
-  getActiveMember(): Observable<Member2> {
+  getActiveMember(): Observable<Member> {
     return defer(() => this.organization.getActiveMember()).pipe(
-      map((data) => this.mainService.mapData<Member2>(data as any)),
+      map((data) => this.mainService.mapData<Member>(data as any)),
     )
   }
 

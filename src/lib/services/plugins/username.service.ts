@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core'
 import { defer, filter, Observable, switchMap } from 'rxjs'
-import { MainService } from './main.service'
-import { Session2, User } from '../models'
-import { AuthService } from './auth.service'
-import { isEmail } from '../utils/email.util'
+import { MainService } from '../main.service'
+import { AuthService } from '../auth.service'
+import { isEmail } from '../../utils/email.util'
+import type { User, Session } from 'better-auth'
 
 @Injectable({ providedIn: 'root' })
 export class UsernameService {
@@ -18,7 +18,7 @@ export class UsernameService {
    */
   signIn(data: { login: string; password: string; rememberMe?: boolean }): Observable<{
     user: User
-    session: Session2
+    session: Session
   }> {
     if (isEmail(data.login)) {
       return this.authService.signInEmail({ email: data.login, password: data.password, rememberMe: data.rememberMe })
@@ -29,7 +29,7 @@ export class UsernameService {
 
   signInUsername(data: { username: string; password: string; rememberMe?: boolean }): Observable<{
     user: User
-    session: Session2
+    session: Session
   }> {
     return defer(() => (this.username as any).signIn.username(data)).pipe(
       switchMap(() => this.authService.sessionState$.pipe(filter((s) => s !== null))),

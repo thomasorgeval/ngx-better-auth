@@ -1,8 +1,9 @@
 import { computed, inject, Injectable, signal } from '@angular/core'
 import { BetterFetchError } from 'better-auth/client'
-import { Provider, Session2, User } from '../models'
 import { defer, filter, map, Observable, shareReplay, switchMap } from 'rxjs'
 import { MainService } from './main.service'
+import type { Session, User } from 'better-auth'
+import { Provider } from '../models'
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +16,7 @@ export class AuthService {
   /**
    * Current authenticated session
    */
-  readonly session = signal<{ user: User; session: Session2 } | null>(null)
+  readonly session = signal<{ user: User; session: Session } | null>(null)
 
   /**
    * Whether there is an active session
@@ -26,13 +27,13 @@ export class AuthService {
    * Observable stream of the session state. Emits only when the session is resolved (not pending).
    * This is intended for guards and other async operations.
    */
-  readonly sessionState$!: Observable<{ user: User; session: Session2 } | null>
+  readonly sessionState$!: Observable<{ user: User; session: Session } | null>
 
   constructor() {
     this.session$()
 
     const useSession$ = new Observable<{
-      data: { user: User; session: Session2 } | null
+      data: { user: User; session: Session } | null
       error: BetterFetchError | null
       isPending: boolean
     }>((subscriber) => {
@@ -80,7 +81,7 @@ export class AuthService {
 
   signInEmail(data: { email: string; password: string; rememberMe?: boolean }): Observable<{
     user: User
-    session: Session2
+    session: Session
   }> {
     return defer(() => this.client.signIn.email(data)).pipe(
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
@@ -101,7 +102,7 @@ export class AuthService {
     displayUsername?: string
   }): Observable<{
     user: User
-    session: Session2
+    session: Session
   }> {
     return defer(() => this.client.signUp.email(data)).pipe(
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
@@ -110,7 +111,7 @@ export class AuthService {
 
   signInProvider(provider: Provider): Observable<{
     user: User
-    session: Session2
+    session: Session
   }> {
     return defer(() => this.client.signIn.social({ provider })).pipe(
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),

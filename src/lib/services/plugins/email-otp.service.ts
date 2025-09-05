@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core'
 import { defer, filter, switchMap } from 'rxjs'
-import { validatePlugin } from '../utils/validate-plugin'
-import { MainService } from './main.service'
-import { AuthService } from './auth.service'
+import { validatePlugin } from '../../utils/validate-plugin'
+import { MainService } from '../main.service'
+import { AuthService } from '../auth.service'
 
 @Injectable({ providedIn: 'root' })
 export class EmailOtpService {
@@ -27,7 +27,11 @@ export class EmailOtpService {
     return defer(() => this.emailOtp.sendVerificationOtp(data))
   }
 
-  checkVerificationOtp(data: { email: string; type: 'sign-in' | 'email-verification' | 'forget-password'; otp: string }) {
+  checkVerificationOtp(data: {
+    email: string
+    type: 'sign-in' | 'email-verification' | 'forget-password'
+    otp: string
+  }) {
     return defer(() => this.emailOtp.checkVerificationOtp(data))
   }
 
