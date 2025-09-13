@@ -123,9 +123,12 @@ export class AuthService {
     user: User
     session: Session
   }> {
-    return defer(() => this.client.signIn.social(data as any)).pipe(
-      switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
-    )
+    return defer(() =>
+      this.client.signIn.social({
+        callbackURL: window.location.origin,
+        ...(data as any),
+      }),
+    ).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
   }
 
   signOut(): Observable<null> {
