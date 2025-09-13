@@ -109,11 +109,21 @@ export class AuthService {
     )
   }
 
-  signInProvider(provider: Provider): Observable<{
+  signInProvider(data: {
+    provider: Provider
+    callbackURL?: string
+    disableRedirect?: boolean
+    errorCallbackURL?: string
+    idToken?: string
+    loginHint?: string
+    newUserCallbackURL?: string
+    requestSignUp?: boolean
+    scopes?: string[]
+  }): Observable<{
     user: User
     session: Session
   }> {
-    return defer(() => this.client.signIn.social({ provider })).pipe(
+    return defer(() => this.client.signIn.social(data as any)).pipe(
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
     )
   }
