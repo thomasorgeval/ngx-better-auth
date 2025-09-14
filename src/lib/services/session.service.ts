@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { MainService } from './main.service'
-import type { Session } from 'better-auth'
+import { Session } from '../models'
 
 @Injectable({ providedIn: 'root' })
 export class SessionService {

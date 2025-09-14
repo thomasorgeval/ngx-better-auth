@@ -1,8 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { MainService } from './main.service'
-import { Provider } from '../models'
-import type { Account } from 'better-auth'
+import { Account, Provider } from '../models'
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {

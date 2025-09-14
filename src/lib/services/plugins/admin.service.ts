@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../../utils/validate-plugin'
 import { MainService } from '../main.service'
-import type { Session, User } from 'better-auth'
+import { Session, User } from '../../models'
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {

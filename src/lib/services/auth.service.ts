@@ -2,13 +2,13 @@ import { computed, inject, Injectable, signal } from '@angular/core'
 import { BetterFetchError } from 'better-auth/client'
 import { defer, filter, first, map, Observable, shareReplay, switchMap } from 'rxjs'
 import { MainService } from './main.service'
-import type { Session, User } from 'better-auth'
-import { Provider } from '../models'
+import { Provider, Session, User } from '../models'
+import { BetterAuthPlugin } from 'better-auth'
 
 @Injectable({
   providedIn: 'root',
 })
-export class AuthService {
+export class AuthService<P extends BetterAuthPlugin[] = []> {
   private readonly mainService = inject(MainService)
 
   private readonly client = this.mainService.authClient
@@ -27,13 +27,13 @@ export class AuthService {
    * Observable stream of the session state. Emits only when the session is resolved (not pending).
    * This is intended for guards and other async operations.
    */
-  readonly sessionState$!: Observable<{ user: User; session: Session } | null>
+  readonly sessionState$!: Observable<{ user: User<P>; session: Session } | null>
 
   constructor() {
     this.session$()
 
     const useSession$ = new Observable<{
-      data: { user: User; session: Session } | null
+      data: { user: User<P>; session: Session } | null
       error: BetterFetchError | null
       isPending: boolean
     }>((subscriber) => {

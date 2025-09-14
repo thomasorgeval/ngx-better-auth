@@ -60,7 +60,7 @@ export const appConfig: ApplicationConfig = {
             user,
           },
         }),
-      ],
+      ] as const, // as const is required for proper typing
     })
   ]
 }
@@ -71,6 +71,13 @@ export const appConfig: ApplicationConfig = {
 You can inject different services depending on your needs.  
 **AuthService** provides the core Better Auth client methods (signIn, signOut, signUp, e.g.).  
 The full list of methods  is available at the end of this README.
+
+## How to inject a service with proper typing
+
+```ts
+private readonly config = inject(BETTER_AUTH_CONFIG_TOKEN)
+private readonly authService = inject(AuthService<typeof config.plugins>)
+```
 
 ## 🔌 Plugin compatibility
 
