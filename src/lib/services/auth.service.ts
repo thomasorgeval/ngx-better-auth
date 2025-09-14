@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core'
 import { BetterFetchError } from 'better-auth/client'
-import { defer, filter, map, Observable, shareReplay, switchMap } from 'rxjs'
+import { defer, filter, first, map, Observable, shareReplay, switchMap } from 'rxjs'
 import { MainService } from './main.service'
 import type { Session, User } from 'better-auth'
 import { Provider } from '../models'
@@ -16,7 +16,7 @@ export class AuthService {
   /**
    * Current authenticated session
    */
-  readonly session = signal<{ user: User; session: Session } | null>(null)
+  readonly session = signal<{ user: any; session: any } | null>(null)
 
   /**
    * Whether there is an active session
@@ -179,9 +179,10 @@ export class AuthService {
     )
   }
 
-  deleteUser(data: { callbackURL?: string; token?: string; password?: string }): Observable<null> {
+  deleteUser(data?: { callbackURL?: string; token?: string; password?: string }): Observable<null> {
     return defer(() => this.client.deleteUser(data)).pipe(
       switchMap(() => this.sessionState$.pipe(filter((s) => s === null))),
+      first(),
     )
   }
 }
