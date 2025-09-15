@@ -1,8 +1,8 @@
 export interface Session {
   id: string
   impersonatedBy?: string
-  ipAddress?: string | null
-  userAgent?: string | null
+  ipAddress?: string
+  userAgent?: string
   updatedAt: Date
   userId: string
   expiresAt: Date
