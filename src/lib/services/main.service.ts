@@ -12,6 +12,8 @@ export class MainService {
     ...this.config,
   })
 
+  readonly url = `${this.config.baseURL}${this.config.basePath || '/api/auth'}`
+
   mapData<T>(data: { data: T; error: BetterFetchError }): T {
     if (data.error) {
       throw data.error

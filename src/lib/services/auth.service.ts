@@ -167,12 +167,15 @@ export class AuthService {
     )
   }
 
-  updateUser(data: {
-    name?: string
-    image?: string
-    username?: string
-    displayUsername?: string
-  }): Observable<{ status: boolean }> {
+  updateUser(
+    data: Partial<{
+      name: string
+      image: string
+      username: string
+      displayUsername: string
+      [key: string]: any
+    }>,
+  ): Observable<{ status: boolean }> {
     return defer(() => this.client.updateUser(data)).pipe(
       map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
     )

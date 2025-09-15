@@ -166,6 +166,20 @@ export const routes: Routes = [
 ]
 ```
 
-## 📋 Full list of AuthService methods
+## ✅ Validators
 
-### AuthService
+The username plugin provides validators that work seamlessly with both reactive and template-driven forms.
+
+```ts
+import { FormControl } from '@angular/forms'
+import { inject } from '@angular/core'
+import { UsernameAvailableValidator } from 'ngx-better-auth'
+
+const usernameService = inject(UsernameService)
+const initialUsername = 'thomas-orgeval'
+
+const usernameControl = new FormControl('', {
+    asyncValidators: [usernameAvailableValidator(usernameService, initialUsername)],
+    updateOn: 'change'
+})
+```

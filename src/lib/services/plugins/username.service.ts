@@ -1,12 +1,15 @@
 import { inject, Injectable } from '@angular/core'
-import { defer, filter, Observable, switchMap } from 'rxjs'
+import { defer, filter, map, Observable, switchMap } from 'rxjs'
 import { MainService } from '../main.service'
 import { AuthService } from '../auth.service'
 import { isEmail } from '../../utils/email.util'
 import { Session, User } from '../../models'
+import { HttpClient } from '@angular/common/http'
 
 @Injectable({ providedIn: 'root' })
 export class UsernameService {
+  private readonly http = inject(HttpClient)
+
   private readonly mainService = inject(MainService)
   private readonly authService = inject(AuthService)
 
@@ -36,7 +39,9 @@ export class UsernameService {
     )
   }
 
-  isUsernameAvailable(data: { username: string }): Observable<unknown> {
-    return defer(() => (this.username as any).isUsernameAvailable(data))
+  isUsernameAvailable(data: { username: string }): Observable<boolean> {
+    return this.http
+      .post<{ available: boolean }>(`${this.mainService.url}/is-username-available`, data)
+      .pipe(map((res) => res.available))
   }
 }
