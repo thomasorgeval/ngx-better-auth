@@ -3,7 +3,7 @@ import { defer, filter, first, map, Observable, switchMap } from 'rxjs'
 import { validatePlugin } from '../../utils/validate-plugin'
 import { MainService } from '../main.service'
 import { AuthService } from '../auth.service'
-import type { User, Session } from 'better-auth'
+import { Session, User } from '../../models'
 
 @Injectable({ providedIn: 'root' })
 export class TwoFactorService {

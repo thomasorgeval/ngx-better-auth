@@ -2,8 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core'
 import { BetterFetchError } from 'better-auth/client'
 import { defer, filter, first, map, Observable, shareReplay, switchMap } from 'rxjs'
 import { MainService } from './main.service'
-import type { Session, User } from 'better-auth'
-import { Provider } from '../models'
+import { Provider, Session, User } from '../models'
 
 @Injectable({
   providedIn: 'root',

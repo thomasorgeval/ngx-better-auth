@@ -3,7 +3,7 @@ import { defer, filter, Observable, switchMap } from 'rxjs'
 import { MainService } from '../main.service'
 import { AuthService } from '../auth.service'
 import { isEmail } from '../../utils/email.util'
-import type { User, Session } from 'better-auth'
+import { Session, User } from '../../models'
 
 @Injectable({ providedIn: 'root' })
 export class UsernameService {
