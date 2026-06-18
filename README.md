@@ -36,7 +36,7 @@ First, configure your Better Auth client in your application:
 import { ApplicationConfig } from '@angular/core'
 import { provideBetterAuth } from 'ngx-better-auth'
 import { environment } from './environments/environment'
-import { adminClient, twoFactorClient, usernameClient } from 'better-auth/client/plugins'
+import { adminClient, siweClient, twoFactorClient, usernameClient } from 'better-auth/client/plugins'
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -60,6 +60,7 @@ export const appConfig: ApplicationConfig = {
             user,
           },
         }),
+        siweClient(),
       ],
     })
   ]
@@ -84,7 +85,7 @@ The full list of methods  is available at the end of this README.
 - ✅ Passkey ➡️ `PasskeyService`
 - ✅ Generic OAuth ➡️ `GenericOauthService`
 - ✅ One Tap ➡️ `OneTapService`
-- ❌ Sign In With Ethereum
+- ✅ Sign In With Ethereum (SIWE) ➡️ `SiweService`
 
 ### Authorization
 - ✅ Admin ➡️ `AdminService`

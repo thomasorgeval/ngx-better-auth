@@ -12,3 +12,5 @@ export * from './plugins/username.service'
 
 export * from './plugins/admin.service'
 export * from './plugins/organization.service'
+
+export * from './plugins/siwe.service'
