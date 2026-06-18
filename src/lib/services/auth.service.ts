@@ -83,6 +83,7 @@ export class AuthService {
     session: Session
   }> {
     return defer(() => this.client.signIn.email(data)).pipe(
+      map((data) => this.mainService.mapData(data as any)),
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
     )
   }
@@ -104,6 +105,7 @@ export class AuthService {
     session: Session
   }> {
     return defer(() => this.client.signUp.email(data)).pipe(
+      map((data) => this.mainService.mapData(data as any)),
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
     )
   }
@@ -127,11 +129,17 @@ export class AuthService {
         callbackURL: window.location.origin,
         ...(data as any),
       }),
-    ).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))))
+    ).pipe(
+      map((data) => this.mainService.mapData(data as any)),
+      switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
+    )
   }
 
   signOut(): Observable<null> {
-    return defer(() => this.client.signOut()).pipe(switchMap(() => this.sessionState$.pipe(filter((s) => s === null))))
+    return defer(() => this.client.signOut()).pipe(
+      map((data) => this.mainService.mapData(data as any)),
+      switchMap(() => this.sessionState$.pipe(filter((s) => s === null))),
+    )
   }
 
   sendVerificationEmail(data: { email: string; callbackURL?: string }): Observable<{ status: boolean }> {
@@ -183,6 +191,7 @@ export class AuthService {
 
   deleteUser(data?: { callbackURL?: string; token?: string; password?: string }): Observable<null> {
     return defer(() => this.client.deleteUser(data)).pipe(
+      map((data) => this.mainService.mapData(data as any)),
       switchMap(() => this.sessionState$.pipe(filter((s) => s === null))),
       first(),
     )
