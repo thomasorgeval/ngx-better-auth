@@ -8,7 +8,7 @@ An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better
 ![downloads](https://img.shields.io/npm/dm/ngx-better-auth)
 
 ![angular](https://img.shields.io/badge/angular-20+-dd0031?logo=angular&logoColor=white)
-![better-auth](https://img.shields.io/badge/better--auth-1.3.7+-blueviolet)
+![better-auth](https://img.shields.io/badge/better--auth-1.6.x-blueviolet)
 
 ---
 
@@ -16,7 +16,8 @@ An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better
 
 | ngx-better-auth | Angular | Better Auth |
 |-----------------|---------|-------------|
-| `latest`        | `>=20`  | `>=1.3.7`   |
+| `1.6.x`         | `>=20`  | `>=1.6.10 <1.7.0` |
+| `0.11.x`        | `>=20`  | `>=1.3.7`   |
 
 ---
 
@@ -24,6 +25,12 @@ An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better
 
 ```bash
 npm install ngx-better-auth better-auth
+```
+
+If you use Passkey, install the split Better Auth Passkey package too:
+
+```bash
+npm install @better-auth/passkey
 ```
 
 ---
@@ -37,6 +44,7 @@ import { ApplicationConfig } from '@angular/core'
 import { provideBetterAuth } from 'ngx-better-auth'
 import { environment } from './environments/environment'
 import { adminClient, siweClient, twoFactorClient, usernameClient } from 'better-auth/client/plugins'
+import { passkeyClient } from '@better-auth/passkey/client'
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -60,6 +68,7 @@ export const appConfig: ApplicationConfig = {
             user,
           },
         }),
+        passkeyClient(),
         siweClient(),
       ],
     })
@@ -68,6 +77,22 @@ export const appConfig: ApplicationConfig = {
 ```
 
 ## 🧩 Different services
+
+### Migrating to 1.6.x
+
+`ngx-better-auth 1.6.x` targets Better Auth `>=1.6.10 <1.7.0`.
+
+If you use Passkey, install the split package and update imports:
+
+```bash
+pnpm add @better-auth/passkey
+```
+
+```ts
+import { passkeyClient } from '@better-auth/passkey/client'
+```
+
+SIWE users can keep using `SiweService.getNonce(...)`; internally it now maps to Better Auth's `siwe.getNonce` endpoint introduced in `1.6.10`.
 
 You can inject different services depending on your needs.  
 **AuthService** provides the core Better Auth client methods (signIn, signOut, signUp, e.g.).  

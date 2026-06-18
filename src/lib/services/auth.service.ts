@@ -36,7 +36,7 @@ export class AuthService {
       error: BetterFetchError | null
       isPending: boolean
     }>((subscriber) => {
-      this.client.useSession.subscribe((value) => subscriber.next(value as any))
+      this.client.useSession.subscribe((value: any) => subscriber.next(value as any))
     })
 
     this.sessionState$ = useSession$.pipe(
@@ -61,7 +61,7 @@ export class AuthService {
   }
 
   private session$() {
-    this.client.useSession.subscribe((session) => {
+    this.client.useSession.subscribe((session: any) => {
       if (session.isPending) {
         this.session.set(null)
         return
