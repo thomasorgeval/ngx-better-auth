@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { MainService } from '../main.service'
 import { validatePlugin } from '../../utils/validate-plugin'
-import type { Passkey } from 'better-auth/plugins/passkey'
+import type { Passkey } from '@better-auth/passkey'
 
 @Injectable({ providedIn: 'root' })
 export class PasskeyService {

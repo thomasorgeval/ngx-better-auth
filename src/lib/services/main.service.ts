@@ -8,7 +8,7 @@ import { BetterFetchError, createAuthClient } from 'better-auth/client'
 export class MainService {
   private readonly config = inject(BETTER_AUTH_CONFIG_TOKEN)
 
-  readonly authClient = createAuthClient({
+  readonly authClient: any = createAuthClient({
     ...this.config,
   })
 

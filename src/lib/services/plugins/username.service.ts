@@ -13,7 +13,7 @@ export class UsernameService {
   private readonly mainService = inject(MainService)
   private readonly authService = inject(AuthService)
 
-  username = this.mainService.authClient
+  username: any = this.mainService.authClient
 
   /**
    * pass either email or username to sign in. Needs username plugin enabled to use username.

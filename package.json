@@ -1,6 +1,6 @@
 {
   "name": "ngx-better-auth",
-  "version": "0.11.0",
+  "version": "1.6.0",
   "repository": {
     "url": "https://github.com/thomasorgeval/ngx-better-auth"
   },
@@ -12,8 +12,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "watch": "ng build --watch --configuration development"
   },
   "packageManager": "pnpm@10.15.0",
   "license": "MIT",
@@ -32,22 +31,28 @@
     "@angular/core": ">=20.0.0",
     "@angular/forms": ">=20.0.0",
     "@angular/router": ">=20.0.0",
-    "better-auth": ">=1.3.7",
+    "@better-auth/passkey": ">=1.6.10 <1.7.0",
+    "better-auth": ">=1.6.10 <1.7.0",
     "rxjs": ">=7.8.0"
   },
+  "peerDependenciesMeta": {
+    "@better-auth/passkey": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "@angular/build": "^20.2.1",
-    "@angular/cli": "^20.2.1",
-    "@angular/compiler": "^20.2.0",
-    "@angular/compiler-cli": "^20.2.0",
-    "@angular/platform-browser-dynamic": "^20.2.3",
-    "@types/jasmine": "~5.1.0",
-    "jasmine-core": "~5.9.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
+    "@angular/build": "^20.3.13",
+    "@angular/cli": "^20.3.13",
+    "@angular/common": "^20.3.15",
+    "@angular/compiler": "^20.3.15",
+    "@angular/compiler-cli": "^20.3.15",
+    "@angular/core": "^20.3.15",
+    "@angular/forms": "^20.3.15",
+    "@angular/platform-browser": "^20.3.15",
+    "@angular/platform-browser-dynamic": "^20.3.15",
+    "@angular/router": "^20.3.15",
+    "@better-auth/passkey": "1.6.19",
+    "better-auth": "1.6.19",
     "ng-packagr": "^20.2.0",
     "prettier": "^3.6.2",
     "typescript": "~5.9.2",

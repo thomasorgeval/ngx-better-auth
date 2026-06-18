@@ -8,6 +8,12 @@ export interface SiweNonceResult {
   nonce: string
 }
 
+export type SiweNonceRequest = {
+  walletAddress?: string
+  address?: string
+  chainId?: number
+}
+
 export interface SiweVerifyResult {
   token: string
   success: boolean
@@ -35,8 +41,8 @@ export class SiweService {
    * Fetches a nonce for the given wallet address to be included in the SIWE message.
    * @param data - The wallet address and optional chain ID
    */
-  getNonce(data: { walletAddress: string; chainId?: number }): Observable<SiweNonceResult> {
-    return defer(() => this.siwe.getSiweNonce(data)).pipe(
+  getNonce(data: SiweNonceRequest): Observable<SiweNonceResult> {
+    return defer(() => this.siwe.getNonce(data)).pipe(
       map((res) => this.mainService.mapData<SiweNonceResult>(res as any)),
     )
   }
