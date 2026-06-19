@@ -160,6 +160,81 @@ export class MyComponent {
 }
 ```
 
+## ⚡ Signal resources for reads
+
+GET/list-style methods keep their existing `Observable` API and also expose Angular `resource` factories for zoneless-friendly templates.
+
+Mutations such as sign in, sign out, update, delete, revoke, invite, and verify still use `Observable` because they are command workflows.
+
+### Available resource factories
+
+- `SessionService.sessionsResource()`
+- `AccountService.accountsResource()`
+- `PasskeyService.userPasskeysResource()`
+- `OrganizationService.organizationsResource()`
+- `OrganizationService.fullOrganizationResource(() => params)`
+- `OrganizationService.invitationResource(() => params)`
+- `OrganizationService.invitationsResource(() => params)`
+- `OrganizationService.userInvitationsResource()`
+- `OrganizationService.activeMemberResource()`
+- `AdminService.usersResource(() => params)`
+- `AdminService.userSessionsResource(() => params)`
+
+### Simple read resource
+
+```ts
+import { Component, inject } from '@angular/core'
+import { SessionService } from 'ngx-better-auth'
+
+@Component({
+    // ...
+})
+export class SessionsComponent {
+    private readonly sessionService = inject(SessionService)
+
+    readonly sessions = this.sessionService.sessionsResource()
+}
+```
+
+```html
+@if (sessions.isLoading()) {
+    <p>Loading sessions...</p>
+} @else if (sessions.error()) {
+    <p>Unable to load sessions.</p>
+} @else {
+    @for (session of sessions.value() ?? []; track session.token) {
+        <p>{{ session.ipAddress }}</p>
+    }
+}
+```
+
+### Parameterized read resource
+
+```ts
+import { Component, inject, signal } from '@angular/core'
+import { OrganizationService } from 'ngx-better-auth'
+
+@Component({
+    // ...
+})
+export class OrganizationComponent {
+    private readonly organizationService = inject(OrganizationService)
+
+    readonly organizationId = signal<string | undefined>(undefined)
+
+    readonly organization = this.organizationService.fullOrganizationResource(() => ({
+        organizationId: this.organizationId(),
+        membersLimit: 20,
+    }))
+
+    selectOrganization(organizationId: string) {
+        this.organizationId.set(organizationId)
+    }
+}
+```
+
+Call `resource.reload()` after a mutation when you need to refresh a read resource manually.
+
 ## 🛡️ Guards
 This library ships with guards to quickly set up route protection.
 

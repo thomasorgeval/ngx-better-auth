@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core'
+import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { MainService } from '../main.service'
 import { validatePlugin } from '../../utils/validate-plugin'
@@ -30,9 +30,11 @@ export class PasskeyService {
   }
 
   listUserPasskeys(): Observable<Passkey[]> {
-    return defer(() => this.passkey.listUserPasskeys()).pipe(
-      map((data) => this.mainService.mapData<Passkey[]>(data as any)),
-    )
+    return this.mainService.read<Passkey[]>(() => this.passkey.listUserPasskeys())
+  }
+
+  userPasskeysResource(): ResourceRef<Passkey[] | undefined> {
+    return this.mainService.readResource<Passkey[]>(() => this.passkey.listUserPasskeys())
   }
 
   deletePasskey(data: { id: string }): Observable<{ status: boolean }> {

@@ -1,8 +1,23 @@
-import { inject, Injectable } from '@angular/core'
+import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../../utils/validate-plugin'
 import { MainService } from '../main.service'
 import { Session, User } from '../../models'
+
+type ListUsersParams = {
+  searchValue?: string
+  searchField?: 'email' | 'name'
+  searchOperator?: 'contains' | 'start_with' | 'end_with'
+  limit?: number
+  offset?: number
+  sortBy?: string
+  sortDirection?: 'asc' | 'desc'
+  filterField?: string
+  filterValue?: string | number | boolean
+  filterOperator?: 'eq' | 'ne' | 'lt' | 'lte' | 'gt' | 'gte'
+}
+
+type ListUsersResult = { users: User[]; total: number; limit: number; offset: number }
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -40,28 +55,23 @@ export class AdminService {
     )
   }
 
-  listUsers(data: {
-    searchValue?: string
-    searchField?: 'email' | 'name'
-    searchOperator?: 'contains' | 'start_with' | 'end_with'
-    limit?: number
-    offset?: number
-    sortBy?: string
-    sortDirection?: 'asc' | 'desc'
-    filterField?: string
-    filterValue?: string | number | boolean
-    filterOperator?: 'eq' | 'ne' | 'lt' | 'lte' | 'gt' | 'gte'
-  }): Observable<{ users: User[]; total: number; limit: number; offset: number }> {
-    return defer(() => this.admin.listUsers(data)).pipe(
-      map((data: any) =>
-        this.mainService.mapData<{ users: User[]; total: number; limit: number; offset: number }>(data as any),
-      ),
+  listUsers(data: ListUsersParams): Observable<ListUsersResult> {
+    return this.mainService.read<ListUsersResult>(() => this.admin.listUsers(data))
+  }
+
+  usersResource(params: () => ListUsersParams): ResourceRef<ListUsersResult | undefined> {
+    return this.mainService.readResourceWithParams<ListUsersResult, ListUsersParams>(params, (data) =>
+      this.admin.listUsers(data),
     )
   }
 
   listUserSessions(data: { userId: string }): Observable<{ sessions: Session[] }> {
-    return defer(() => this.admin.listUserSessions(data)).pipe(
-      map((data: any) => this.mainService.mapData<{ sessions: Session[] }>(data)),
+    return this.mainService.read<{ sessions: Session[] }>(() => this.admin.listUserSessions(data))
+  }
+
+  userSessionsResource(params: () => { userId: string }): ResourceRef<{ sessions: Session[] } | undefined> {
+    return this.mainService.readResourceWithParams<{ sessions: Session[] }, { userId: string }>(params, (data) =>
+      this.admin.listUserSessions(data),
     )
   }
 

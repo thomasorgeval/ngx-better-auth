@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core'
+import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { MainService } from './main.service'
 import { Account, Provider } from '../models'
@@ -10,7 +10,11 @@ export class AccountService {
   private readonly client = this.mainService.authClient
 
   listAccounts(): Observable<Account[]> {
-    return defer(() => this.client.listAccounts()).pipe(map((data) => this.mainService.mapData<Account[]>(data as any)))
+    return this.mainService.read<Account[]>(() => this.client.listAccounts())
+  }
+
+  accountsResource(): ResourceRef<Account[] | undefined> {
+    return this.mainService.readResource<Account[]>(() => this.client.listAccounts())
   }
 
   linkSocial(data: {

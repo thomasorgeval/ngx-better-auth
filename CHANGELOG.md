@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+## [1.6.1] - 2026-06-19
+
+### Added
+
+- Added Angular `resource` factories for GET/list-style reads while keeping existing `Observable` methods.
+- Added shared Better Auth read helpers to keep Observable and resource error mapping consistent.
+- Added resource factories for sessions, accounts, passkeys, organization reads, and admin reads.
+
+### Documentation
+
+- Documented zoneless-friendly resource usage with simple and parameterized examples.
+
 ## [1.6.0] - 2026-06-18
 
 ### Added
@@ -34,7 +48,9 @@ pnpm add @better-auth/passkey
 ```
 
 ```ts
-import { passkeyClient } from '@better-auth/passkey/client'
+import { passkeyClient } from "@better-auth/passkey/client";
 ```
 
+[Unreleased]: https://github.com/thomasorgeval/ngx-better-auth/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/thomasorgeval/ngx-better-auth/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/thomasorgeval/ngx-better-auth/compare/v0.11.0...v1.6.0

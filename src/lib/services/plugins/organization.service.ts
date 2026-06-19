@@ -1,8 +1,20 @@
-import { inject, Injectable } from '@angular/core'
+import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../../utils/validate-plugin'
 import { MainService } from '../main.service'
 import type { Organization, Member, Invitation } from 'better-auth/plugins/organization'
+
+type FullOrganizationParams = {
+  organizationId?: string
+  organizationSlug?: string
+  membersLimit?: number
+}
+
+type InvitationDetails = {
+  organizationName: string
+  organizationSlug: string
+  inviterEmail: string
+} & Invitation
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
@@ -33,9 +45,11 @@ export class OrganizationService {
   }
 
   list(): Observable<Organization[]> {
-    return defer(() => this.organization.list()).pipe(
-      map((data) => this.mainService.mapData<Organization[]>(data as any)),
-    )
+    return this.mainService.read<Organization[]>(() => this.organization.list())
+  }
+
+  organizationsResource(): ResourceRef<Organization[] | undefined> {
+    return this.mainService.readResource<Organization[]>(() => this.organization.list())
   }
 
   setActive(data: { organizationId?: string; organizationSlug?: string }): Observable<Organization> {
@@ -44,13 +58,15 @@ export class OrganizationService {
     )
   }
 
-  getFullOrganization(data: {
-    organizationId?: string
-    organizationSlug?: string
-    membersLimit?: number
-  }): Observable<Organization> {
+  getFullOrganization(data: FullOrganizationParams): Observable<Organization> {
     return defer(() => this.organization.getFullOrganization(data)).pipe(
       map((data) => this.mainService.mapData<Organization>(data as any)),
+    )
+  }
+
+  fullOrganizationResource(params: () => FullOrganizationParams): ResourceRef<Organization | undefined> {
+    return this.mainService.readResourceWithParams<Organization, FullOrganizationParams>(params, (data) =>
+      this.organization.getFullOrganization(data),
     )
   }
 
@@ -102,36 +118,34 @@ export class OrganizationService {
     )
   }
 
-  getInvitation(data: { id: string }): Observable<
-    {
-      organizationName: string
-      organizationSlug: string
-      inviterEmail: string
-    } & Invitation
-  > {
+  getInvitation(data: { id: string }): Observable<InvitationDetails> {
     return defer(() => this.organization.getInvitation(data)).pipe(
-      map((data) =>
-        this.mainService.mapData<
-          {
-            organizationName: string
-            organizationSlug: string
-            inviterEmail: string
-          } & Invitation
-        >(data as any),
-      ),
+      map((data) => this.mainService.mapData<InvitationDetails>(data as any)),
+    )
+  }
+
+  invitationResource(params: () => { id: string }): ResourceRef<InvitationDetails | undefined> {
+    return this.mainService.readResourceWithParams<InvitationDetails, { id: string }>(params, (data) =>
+      this.organization.getInvitation(data),
     )
   }
 
   listInvitations(data: { organizationId?: string }): Observable<Invitation[]> {
-    return defer(() => this.organization.listInvitations(data)).pipe(
-      map((data) => this.mainService.mapData<Invitation[]>(data as any)),
+    return this.mainService.read<Invitation[]>(() => this.organization.listInvitations(data))
+  }
+
+  invitationsResource(params: () => { organizationId?: string }): ResourceRef<Invitation[] | undefined> {
+    return this.mainService.readResourceWithParams<Invitation[], { organizationId?: string }>(params, (data) =>
+      this.organization.listInvitations(data),
     )
   }
 
   listUserInvitations(): Observable<Invitation[]> {
-    return defer(() => this.organization.listUserInvitations()).pipe(
-      map((data) => this.mainService.mapData<Invitation[]>(data as any)),
-    )
+    return this.mainService.read<Invitation[]>(() => this.organization.listUserInvitations())
+  }
+
+  userInvitationsResource(): ResourceRef<Invitation[] | undefined> {
+    return this.mainService.readResource<Invitation[]>(() => this.organization.listUserInvitations())
   }
 
   listMembers(
@@ -160,9 +174,11 @@ export class OrganizationService {
   }
 
   getActiveMember(): Observable<Member> {
-    return defer(() => this.organization.getActiveMember()).pipe(
-      map((data) => this.mainService.mapData<Member>(data as any)),
-    )
+    return this.mainService.read<Member>(() => this.organization.getActiveMember())
+  }
+
+  activeMemberResource(): ResourceRef<Member | undefined> {
+    return this.mainService.readResource<Member>(() => this.organization.getActiveMember())
   }
 
   leave(data: { organizationId?: string }): Observable<void> {

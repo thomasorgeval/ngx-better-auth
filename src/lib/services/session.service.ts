@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core'
+import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { MainService } from './main.service'
 import { Session } from '../models'
@@ -10,7 +10,11 @@ export class SessionService {
   private readonly client = this.mainService.authClient
 
   listSessions(): Observable<Session[]> {
-    return defer(() => this.client.listSessions()).pipe(map((data) => this.mainService.mapData<Session[]>(data as any)))
+    return this.mainService.read<Session[]>(() => this.client.listSessions())
+  }
+
+  sessionsResource(): ResourceRef<Session[] | undefined> {
+    return this.mainService.readResource<Session[]>(() => this.client.listSessions())
   }
 
   revokeSession(data: { token: string }): Observable<{ success: boolean }> {
