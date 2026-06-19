@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.2] - 2026-06-19
+
+### Added
+
+- Added `hasOrganizationRole(...)` to guard routes by Better Auth organization roles scoped to the active organization member.
+- Added `hasActiveOrganization(...)` to guard routes that require an active organization member.
+- Added guard coverage for owner/admin access, rejected members, missing active members, custom redirects, `UrlTree` redirects, and multi-role organization members.
+
+### Documentation
+
+- Documented organization-aware route guard usage in the README.
+
 ## [1.6.1] - 2026-06-19
 
 ### Added
@@ -51,6 +63,7 @@ pnpm add @better-auth/passkey
 import { passkeyClient } from "@better-auth/passkey/client";
 ```
 
-[Unreleased]: https://github.com/thomasorgeval/ngx-better-auth/compare/v1.6.1...HEAD
+[Unreleased]: https://github.com/thomasorgeval/ngx-better-auth/compare/v1.6.2...HEAD
+[1.6.2]: https://github.com/thomasorgeval/ngx-better-auth/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/thomasorgeval/ngx-better-auth/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/thomasorgeval/ngx-better-auth/compare/v0.11.0...v1.6.0

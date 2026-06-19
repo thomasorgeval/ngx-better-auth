@@ -242,11 +242,13 @@ This library ships with guards to quickly set up route protection.
 - `redirectUnauthorizedTo(['/login'])` → redirect if not logged in
 - `redirectLoggedInTo(['/'])` → redirect if already logged in 
 - `hasRole(['admin'], ['/unauthorized'])` → restrict access by role and redirect if not authorized
+- `hasOrganizationRole(['owner', 'admin'], ['/unauthorized'])` → restrict access by active organization role
+- `hasActiveOrganization(['/select-organization'])` → require an active organization member
 
 ### Usage in routes
 ```ts
 import { Routes } from '@angular/router'
-import { canActivate, redirectLoggedInTo, redirectUnauthorizedTo, hasRole } from 'ngx-better-auth'
+import { canActivate, redirectLoggedInTo, redirectUnauthorizedTo, hasRole, hasOrganizationRole, hasActiveOrganization } from 'ngx-better-auth'
 
 export const routes: Routes = [
   {
@@ -258,6 +260,16 @@ export const routes: Routes = [
     path: 'admin',
     component: AdminComponent,
     ...canActivate(hasRole(['admin'], ['/unauthorized']))
+  },
+  {
+    path: 'organization',
+    component: OrganizationComponent,
+    ...canActivate(hasOrganizationRole(['owner', 'admin'], ['/unauthorized']))
+  },
+  {
+    path: 'organization/select',
+    component: SelectOrganizationComponent,
+    ...canActivate(hasActiveOrganization(['/select-organization']))
   },
   {
     path: 'login',
