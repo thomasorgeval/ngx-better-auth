@@ -33,6 +33,12 @@ If you use Passkey, install the split Better Auth Passkey package too:
 npm install @better-auth/passkey
 ```
 
+If you use the Better Auth Stripe plugin, install its split package too. It is an optional peer dependency of `ngx-better-auth` and is only needed by apps that configure `stripeClient(...)`:
+
+```bash
+npm install @better-auth/stripe
+```
+
 ---
 
 ## ⚙️ Setup Provider
@@ -45,6 +51,7 @@ import { provideBetterAuth } from 'ngx-better-auth'
 import { environment } from './environments/environment'
 import { adminClient, siweClient, twoFactorClient, usernameClient } from 'better-auth/client/plugins'
 import { passkeyClient } from '@better-auth/passkey/client'
+import { stripeClient } from '@better-auth/stripe/client'
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -69,6 +76,7 @@ export const appConfig: ApplicationConfig = {
           },
         }),
         passkeyClient(),
+        stripeClient({ subscription: true }),
         siweClient(),
       ],
     })
@@ -117,6 +125,7 @@ The full list of methods  is available at the end of this README.
 - ❌ API Key
 - ❌ MCP
 - ✅ Organization ➡️ `OrganizationService`
+- ✅ Stripe ➡️ `StripeService`
 
 ### Enterprise
 
@@ -179,6 +188,7 @@ Mutations such as sign in, sign out, update, delete, revoke, invite, and verify 
 - `OrganizationService.activeMemberResource()`
 - `AdminService.usersResource(() => params)`
 - `AdminService.userSessionsResource(() => params)`
+- `StripeService.listResource(() => params)`
 
 ### Simple read resource
 
@@ -295,4 +305,28 @@ const usernameControl = new FormControl('', {
     asyncValidators: [usernameAvailableValidator(usernameService, initialUsername)],
     updateOn: 'change'
 })
+```
+
+### 💰 Stripe subscriptions
+
+Configure Better Auth with `stripeClient({ subscription: true })`, then inject `StripeService` to start checkouts, list subscriptions, cancel, restore, or open the billing portal.
+
+```ts
+import { inject } from '@angular/core'
+import { StripeService } from 'ngx-better-auth'
+
+export class UsageComponent {
+    private readonly subscriptions = inject(StripeService)
+
+    startCheckout(orgId: string) {
+        return this.subscriptions.upgrade({
+            plan: 'starter',
+            annual: false,
+            customerType: 'organization',
+            referenceId: orgId,
+            successUrl: '/organization/usage?checkout=success',
+            cancelUrl: '/organization/usage?checkout=cancelled',
+        })
+    }
+}
 ```
