@@ -307,7 +307,7 @@ const usernameControl = new FormControl('', {
 })
 ```
 
-### 💰 Stripe subscriptions
+## 💰 Stripe subscriptions
 
 Configure Better Auth with `stripeClient({ subscription: true })`, then inject `StripeService` to start checkouts, list subscriptions, cancel, restore, or open the billing portal.
 
