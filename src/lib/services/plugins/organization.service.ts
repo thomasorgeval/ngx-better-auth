@@ -59,14 +59,14 @@ export class OrganizationService {
   }
 
   getFullOrganization(data: FullOrganizationParams): Observable<Organization> {
-    return defer(() => this.organization.getFullOrganization(data)).pipe(
+    return defer(() => this.organization.getFullOrganization({ query: data })).pipe(
       map((data) => this.mainService.mapData<Organization>(data as any)),
     )
   }
 
   fullOrganizationResource(params: () => FullOrganizationParams): ResourceRef<Organization | undefined> {
     return this.mainService.readResourceWithParams<Organization, FullOrganizationParams>(params, (data) =>
-      this.organization.getFullOrganization(data),
+      this.organization.getFullOrganization({ query: data }),
     )
   }
 
@@ -119,24 +119,24 @@ export class OrganizationService {
   }
 
   getInvitation(data: { id: string }): Observable<InvitationDetails> {
-    return defer(() => this.organization.getInvitation(data)).pipe(
+    return defer(() => this.organization.getInvitation({ query: data })).pipe(
       map((data) => this.mainService.mapData<InvitationDetails>(data as any)),
     )
   }
 
   invitationResource(params: () => { id: string }): ResourceRef<InvitationDetails | undefined> {
     return this.mainService.readResourceWithParams<InvitationDetails, { id: string }>(params, (data) =>
-      this.organization.getInvitation(data),
+      this.organization.getInvitation({ query: data }),
     )
   }
 
   listInvitations(data: { organizationId?: string }): Observable<Invitation[]> {
-    return this.mainService.read<Invitation[]>(() => this.organization.listInvitations(data))
+    return this.mainService.read<Invitation[]>(() => this.organization.listInvitations({ query: data }))
   }
 
   invitationsResource(params: () => { organizationId?: string }): ResourceRef<Invitation[] | undefined> {
     return this.mainService.readResourceWithParams<Invitation[], { organizationId?: string }>(params, (data) =>
-      this.organization.listInvitations(data),
+      this.organization.listInvitations({ query: data }),
     )
   }
 
@@ -160,7 +160,7 @@ export class OrganizationService {
       filterValue?: string
     } = {},
   ) {
-    return defer(() => this.organization.listMembers(data))
+    return defer(() => this.organization.listMembers({ query: data }))
   }
 
   removeMember(data: { memberIdOrEmail: string; organizationId?: string }): Observable<{ member: Member }> {
@@ -190,7 +190,7 @@ export class OrganizationService {
   }
 
   listTeams(data: { organizationId?: string }) {
-    return defer(() => this.organization.listTeams(data))
+    return defer(() => this.organization.listTeams({ query: data }))
   }
 
   updateTeam(data: {
@@ -213,7 +213,7 @@ export class OrganizationService {
   }
 
   listTeamMembers(data: { teamId: string }) {
-    return defer(() => this.organization.listTeamMembers(data))
+    return defer(() => this.organization.listTeamMembers({ query: data }))
   }
 
   addTeamMember(data: { teamId: string; userId: string }) {
