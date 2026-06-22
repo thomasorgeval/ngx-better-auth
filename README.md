@@ -111,36 +111,28 @@ The full list of methods  is available at the end of this README.
 ### Authentication
 - ✅ Two Factor ➡️ `TwoFactorService`
 - ✅ Username ➡️ `UsernameService`
-- ❌ Anonymous
-- ❌ Phone Number
+- ✅ Anonymous ➡️ `AnonymousService`
+- ✅ Phone Number ➡️ `PhoneNumberService`
 - ✅ Magic Link ➡️ `MagicLinkService`
 - ✅ Email OTP ➡️ `EmailOtpService`
 - ✅ Passkey ➡️ `PasskeyService`
 - ✅ Generic OAuth ➡️ `GenericOauthService`
+- ✅ OAuth Popup ➡️ `OauthPopupService`
 - ✅ One Tap ➡️ `OneTapService`
 - ✅ Sign In With Ethereum (SIWE) ➡️ `SiweService`
 
 ### Authorization
 - ✅ Admin ➡️ `AdminService`
-- ❌ API Key
-- ❌ MCP
 - ✅ Organization ➡️ `OrganizationService`
 - ✅ Stripe ➡️ `StripeService`
 
-### Enterprise
-
-- ❌ OIDC Provider
-- ❌ SSO
-
 ### Utility
 
-- ❌ Bearer
-- ❌ Device Authorization
-- ❌ Captcha
-- ❌ Last Login Method
-- ❌ Multi Session
-- ❌ One Time Token
-- ❌ JWT
+- ✅ Device Authorization ➡️ `DeviceAuthorizationService`
+- ✅ Last Login Method ➡️ `LastLoginMethodService`
+- ✅ Multi Session ➡️ `MultiSessionService`
+- ✅ One Time Token ➡️ `OneTimeTokenService`
+- ✅ JWT ➡️ `JwtService`
 
 ## 🔄 Real-time Session
 
@@ -189,6 +181,12 @@ Mutations such as sign in, sign out, update, delete, revoke, invite, and verify 
 - `AdminService.usersResource(() => params)`
 - `AdminService.userSessionsResource(() => params)`
 - `StripeService.listResource(() => params)`
+- `MultiSessionService.deviceSessionsResource()`
+- `OrganizationService.activeMemberRoleResource(() => params)`
+- `OrganizationService.rolesResource(() => params)`
+- `OrganizationService.teamsResource(() => params)`
+- `OrganizationService.userTeamsResource()`
+- `OrganizationService.teamMembersResource(() => params)`
 
 ### Simple read resource
 
