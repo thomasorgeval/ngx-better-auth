@@ -160,12 +160,30 @@ export class AuthService {
     )
   }
 
+  verifyEmail(data: { token: string; callbackURL?: string }): Observable<void | { status: boolean }> {
+    return defer(() => this.client.verifyEmail({ query: data })).pipe(
+      map((data) => this.mainService.mapData<void | { status: boolean }>(data as any)),
+    )
+  }
+
+  verifyPassword(data: { password: string }): Observable<{ status: boolean }> {
+    return defer(() => this.client.verifyPassword(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
+  }
+
+  setPassword(data: { newPassword: string }): Observable<{ status: boolean }> {
+    return defer(() => this.client.setPassword(data)).pipe(
+      map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
+  }
+
   changePassword(data: { currentPassword: string; newPassword: string; revokeOtherSessions?: boolean }): Observable<{
-    token: string
+    token: string | null
     user: User
   }> {
     return defer(() => this.client.changePassword(data)).pipe(
-      map((data) => this.mainService.mapData<{ token: string; user: User }>(data as any)),
+      map((data) => this.mainService.mapData<{ token: string | null; user: User }>(data as any)),
     )
   }
 

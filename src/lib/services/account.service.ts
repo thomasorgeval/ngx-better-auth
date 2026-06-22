@@ -1,7 +1,32 @@
 import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { MainService } from './main.service'
-import { Account, Provider } from '../models'
+import { Account, Provider, User } from '../models'
+
+type AccountTokenRequest = { providerId: Provider | string; accountId?: string; userId?: string }
+
+export interface AccountAccessToken {
+  accessToken: string
+  accessTokenExpiresAt?: Date
+  scopes: string[]
+  idToken?: string
+}
+
+export interface AccountRefreshToken {
+  accessToken?: string
+  refreshToken: string
+  accessTokenExpiresAt?: Date
+  refreshTokenExpiresAt?: Date | null
+  scope?: string | null
+  idToken?: string | null
+  providerId: string
+  accountId: string
+}
+
+export interface AccountInfo {
+  user: User
+  data: Record<string, any>
+}
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
@@ -36,6 +61,24 @@ export class AccountService {
   unlinkAccount(data: { providerId: Provider; accountId: string }): Observable<{ status: boolean }> {
     return defer(() => this.client.unlinkAccount(data)).pipe(
       map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
+    )
+  }
+
+  getAccessToken(data: AccountTokenRequest): Observable<AccountAccessToken> {
+    return defer(() => this.client.getAccessToken(data)).pipe(
+      map((data) => this.mainService.mapData<AccountAccessToken>(data as any)),
+    )
+  }
+
+  refreshToken(data: AccountTokenRequest): Observable<AccountRefreshToken> {
+    return defer(() => this.client.refreshToken(data)).pipe(
+      map((data) => this.mainService.mapData<AccountRefreshToken>(data as any)),
+    )
+  }
+
+  accountInfo(data?: AccountTokenRequest): Observable<AccountInfo | null> {
+    return defer(() => this.client.accountInfo(data ? { query: data } : undefined)).pipe(
+      map((data) => this.mainService.mapData<AccountInfo | null>(data as any)),
     )
   }
 }

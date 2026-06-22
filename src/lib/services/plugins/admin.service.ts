@@ -37,6 +37,10 @@ export class AdminService {
     )
   }
 
+  getUser(data: { id: string }): Observable<User> {
+    return this.mainService.read<User>(() => this.admin.getUser({ query: data }))
+  }
+
   createUser(data: {
     email: string
     password: string

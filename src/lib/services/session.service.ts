@@ -17,6 +17,12 @@ export class SessionService {
     return this.mainService.readResource<Session[]>(() => this.client.listSessions())
   }
 
+  updateSession(data: Record<string, any>): Observable<{ session: Session }> {
+    return defer(() => this.client.updateSession(data)).pipe(
+      map((data) => this.mainService.mapData<{ session: Session }>(data as any)),
+    )
+  }
+
   revokeSession(data: { token: string }): Observable<{ success: boolean }> {
     return defer(() => this.client.revokeSession(data)).pipe(
       map((data) => this.mainService.mapData<{ success: boolean }>(data as any)),

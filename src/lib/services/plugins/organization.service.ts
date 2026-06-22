@@ -2,7 +2,7 @@ import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../../utils/validate-plugin'
 import { MainService } from '../main.service'
-import type { Organization, Member, Invitation } from 'better-auth/plugins/organization'
+import type { Organization, Member, Invitation, Team, TeamMember, OrganizationRole } from 'better-auth/plugins/organization'
 
 type FullOrganizationParams = {
   organizationId?: string
@@ -15,6 +15,17 @@ type InvitationDetails = {
   organizationSlug: string
   inviterEmail: string
 } & Invitation
+
+type OrganizationPermission = Record<string, string[]>
+type OrganizationRoleData = OrganizationRole & {
+  id: string
+  organizationId: string
+  role: string
+  permission: OrganizationPermission
+  createdAt: Date
+  updatedAt?: Date
+  [key: string]: any
+}
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
@@ -41,7 +52,9 @@ export class OrganizationService {
   }
 
   checkSlug(data: { slug: string }): Observable<unknown> {
-    return defer(() => this.organization.checkSlug(data))
+    return defer(() => this.organization.checkSlug(data)).pipe(
+      map((data) => this.mainService.mapData<unknown>(data as any)),
+    )
   }
 
   list(): Observable<Organization[]> {
@@ -159,8 +172,10 @@ export class OrganizationService {
       filterOperator?: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'contains'
       filterValue?: string
     } = {},
-  ) {
-    return defer(() => this.organization.listMembers({ query: data }))
+  ): Observable<{ members: Member[]; total: number }> {
+    return this.mainService.read<{ members: Member[]; total: number }>(() =>
+      this.organization.listMembers({ query: data }),
+    )
   }
 
   removeMember(data: { memberIdOrEmail: string; organizationId?: string }): Observable<{ member: Member }> {
@@ -169,8 +184,10 @@ export class OrganizationService {
     )
   }
 
-  updateMemberRoles(data: { memberId: string; role: string | string[]; organizationId?: string }) {
-    return defer(() => this.organization.updateMemberRoles(data))
+  updateMemberRoles(data: { memberId: string; role: string | string[]; organizationId?: string }): Observable<Member> {
+    return defer(() => this.organization.updateMemberRole(data)).pipe(
+      map((data) => this.mainService.mapData<Member>(data as any)),
+    )
   }
 
   getActiveMember(): Observable<Member> {
@@ -181,46 +198,160 @@ export class OrganizationService {
     return this.mainService.readResource<Member>(() => this.organization.getActiveMember())
   }
 
+  getActiveMemberRole(data?: {
+    userId?: string
+    organizationId?: string
+    organizationSlug?: string
+  }): Observable<{ role: string }> {
+    return this.mainService.read<{ role: string }>(() =>
+      this.organization.getActiveMemberRole(data ? { query: data } : undefined),
+    )
+  }
+
+  activeMemberRoleResource(
+    params: () => { userId?: string; organizationId?: string; organizationSlug?: string } | undefined,
+  ): ResourceRef<{ role: string } | undefined> {
+    return this.mainService.readResourceWithParams<
+      { role: string },
+      { userId?: string; organizationId?: string; organizationSlug?: string } | undefined
+    >(params, (data) => this.organization.getActiveMemberRole(data ? { query: data } : undefined))
+  }
+
   leave(data: { organizationId?: string }): Observable<void> {
     return defer(() => this.organization.leave(data)).pipe(map((data) => this.mainService.mapData<void>(data as any)))
   }
 
-  createTeam(data: { name: string; organizationId?: string }) {
-    return defer(() => this.organization.createTeam(data))
+  hasPermission(data: {
+    organizationId?: string
+    permission?: OrganizationPermission
+    permissions?: OrganizationPermission
+  }): Observable<{ success: boolean; error?: string }> {
+    return defer(() => this.organization.hasPermission(data)).pipe(
+      map((data) => this.mainService.mapData<{ success: boolean; error?: string }>(data as any)),
+    )
   }
 
-  listTeams(data: { organizationId?: string }) {
-    return defer(() => this.organization.listTeams({ query: data }))
+  createRole(data: {
+    role: string
+    permission: OrganizationPermission
+    organizationId?: string
+    additionalFields?: Record<string, any>
+  }): Observable<{ success: boolean; roleData: OrganizationRoleData; statements: Record<string, string[]> }> {
+    return defer(() => this.organization.createRole(data)).pipe(
+      map((data) =>
+        this.mainService.mapData<{
+          success: boolean
+          roleData: OrganizationRoleData
+          statements: Record<string, string[]>
+        }>(data as any),
+      ),
+    )
+  }
+
+  deleteRole(data: { organizationId?: string; roleName?: string; roleId?: string }): Observable<{ success: boolean }> {
+    return defer(() => this.organization.deleteRole(data)).pipe(
+      map((data) => this.mainService.mapData<{ success: boolean }>(data as any)),
+    )
+  }
+
+  listRoles(data: { organizationId?: string } = {}): Observable<OrganizationRoleData[]> {
+    return this.mainService.read<OrganizationRoleData[]>(() => this.organization.listRoles({ query: data }))
+  }
+
+  rolesResource(
+    params: () => { organizationId?: string } = () => ({}),
+  ): ResourceRef<OrganizationRoleData[] | undefined> {
+    return this.mainService.readResourceWithParams<OrganizationRoleData[], { organizationId?: string }>(
+      params,
+      (data) => this.organization.listRoles({ query: data }),
+    )
+  }
+
+  getRole(data?: { organizationId?: string; roleName?: string; roleId?: string }): Observable<OrganizationRoleData> {
+    return this.mainService.read<OrganizationRoleData>(() =>
+      this.organization.getRole(data ? { query: data } : undefined),
+    )
+  }
+
+  updateRole(data: {
+    organizationId?: string
+    roleName?: string
+    roleId?: string
+    data: { permission?: OrganizationPermission; roleName?: string; [key: string]: any }
+  }): Observable<{ success: boolean; roleData: OrganizationRoleData }> {
+    return defer(() => this.organization.updateRole(data)).pipe(
+      map((data) => this.mainService.mapData<{ success: boolean; roleData: OrganizationRoleData }>(data as any)),
+    )
+  }
+
+  createTeam(data: { name: string; organizationId?: string }): Observable<Team> {
+    return defer(() => this.organization.createTeam(data)).pipe(
+      map((data) => this.mainService.mapData<Team>(data as any)),
+    )
+  }
+
+  listTeams(data: { organizationId?: string } = {}): Observable<Team[]> {
+    return this.mainService.read<Team[]>(() => this.organization.listTeams({ query: data }))
+  }
+
+  teamsResource(params: () => { organizationId?: string } = () => ({})): ResourceRef<Team[] | undefined> {
+    return this.mainService.readResourceWithParams<Team[], { organizationId?: string }>(params, (data) =>
+      this.organization.listTeams({ query: data }),
+    )
   }
 
   updateTeam(data: {
     teamId: string
     data: { name?: string; organizationId?: string; createdAt?: Date; updatedAt?: Date }
-  }) {
-    return defer(() => this.organization.updateTeam(data))
+  }): Observable<Team | null> {
+    return defer(() => this.organization.updateTeam(data)).pipe(
+      map((data) => this.mainService.mapData<Team | null>(data as any)),
+    )
   }
 
-  removeTeam(data: { teamId: string; organizationId?: string }) {
-    return defer(() => this.organization.removeTeam(data))
+  removeTeam(data: { teamId: string; organizationId?: string }): Observable<{ message: string }> {
+    return defer(() => this.organization.removeTeam(data)).pipe(
+      map((data) => this.mainService.mapData<{ message: string }>(data as any)),
+    )
   }
 
-  setActiveTeam(data: { teamId?: string }) {
-    return defer(() => this.organization.setActiveTeam(data))
+  setActiveTeam(data: { teamId?: string }): Observable<Team | null> {
+    return defer(() => this.organization.setActiveTeam(data)).pipe(
+      map((data) => this.mainService.mapData<Team | null>(data as any)),
+    )
   }
 
-  listUsersTeams() {
-    return defer(() => this.organization.listUsersTeams())
+  listUserTeams(): Observable<Team[]> {
+    return this.mainService.read<Team[]>(() => this.organization.listUserTeams())
   }
 
-  listTeamMembers(data: { teamId: string }) {
-    return defer(() => this.organization.listTeamMembers({ query: data }))
+  listUsersTeams(): Observable<Team[]> {
+    return this.listUserTeams()
   }
 
-  addTeamMember(data: { teamId: string; userId: string }) {
-    return defer(() => this.organization.addTeamMember(data))
+  userTeamsResource(): ResourceRef<Team[] | undefined> {
+    return this.mainService.readResource<Team[]>(() => this.organization.listUserTeams())
   }
 
-  removeTeamMember(data: { teamId: string; userId: string }) {
-    return defer(() => this.organization.removeTeamMember(data))
+  listTeamMembers(data: { teamId: string }): Observable<TeamMember[]> {
+    return this.mainService.read<TeamMember[]>(() => this.organization.listTeamMembers({ query: data }))
+  }
+
+  teamMembersResource(params: () => { teamId: string }): ResourceRef<TeamMember[] | undefined> {
+    return this.mainService.readResourceWithParams<TeamMember[], { teamId: string }>(params, (data) =>
+      this.organization.listTeamMembers({ query: data }),
+    )
+  }
+
+  addTeamMember(data: { teamId: string; userId: string }): Observable<TeamMember> {
+    return defer(() => this.organization.addTeamMember(data)).pipe(
+      map((data) => this.mainService.mapData<TeamMember>(data as any)),
+    )
+  }
+
+  removeTeamMember(data: { teamId: string; userId: string }): Observable<{ message: string }> {
+    return defer(() => this.organization.removeTeamMember(data)).pipe(
+      map((data) => this.mainService.mapData<{ message: string }>(data as any)),
+    )
   }
 }
