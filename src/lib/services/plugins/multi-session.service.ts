@@ -1,9 +1,8 @@
 import { inject, Injectable, type ResourceRef } from '@angular/core'
-import { defer, filter, map, Observable, switchMap } from 'rxjs'
+import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../../utils/validate-plugin'
 import { Session, User } from '../../models'
 import { MainService } from '../main.service'
-import { AuthService } from '../auth.service'
 
 export interface DeviceSession {
   session: Session
@@ -13,7 +12,6 @@ export interface DeviceSession {
 @Injectable({ providedIn: 'root' })
 export class MultiSessionService {
   private readonly mainService = inject(MainService)
-  private readonly authService = inject(AuthService)
 
   private readonly multiSession: any
 
@@ -34,7 +32,6 @@ export class MultiSessionService {
   setActive(data: { sessionToken: string }): Observable<{ user: User; session: Session }> {
     return defer(() => this.multiSession.setActive(data)).pipe(
       map((data) => this.mainService.mapData<{ user: User; session: Session }>(data as any)),
-      switchMap(() => this.authService.sessionState$.pipe(filter((s) => s !== null))),
     )
   }
 

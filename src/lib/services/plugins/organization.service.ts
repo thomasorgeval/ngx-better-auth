@@ -2,7 +2,7 @@ import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { validatePlugin } from '../../utils/validate-plugin'
 import { MainService } from '../main.service'
-import type { Organization, Member, Invitation, Team, OrganizationRole } from 'better-auth/plugins/organization'
+import type { Organization, Member, Invitation, Team, TeamMember, OrganizationRole } from 'better-auth/plugins/organization'
 
 type FullOrganizationParams = {
   organizationId?: string
@@ -185,7 +185,7 @@ export class OrganizationService {
   }
 
   updateMemberRoles(data: { memberId: string; role: string | string[]; organizationId?: string }): Observable<Member> {
-    return defer(() => this.organization.updateMemberRoles(data)).pipe(
+    return defer(() => this.organization.updateMemberRole(data)).pipe(
       map((data) => this.mainService.mapData<Member>(data as any)),
     )
   }
@@ -303,21 +303,21 @@ export class OrganizationService {
   updateTeam(data: {
     teamId: string
     data: { name?: string; organizationId?: string; createdAt?: Date; updatedAt?: Date }
-  }): Observable<Team> {
+  }): Observable<Team | null> {
     return defer(() => this.organization.updateTeam(data)).pipe(
-      map((data) => this.mainService.mapData<Team>(data as any)),
+      map((data) => this.mainService.mapData<Team | null>(data as any)),
     )
   }
 
-  removeTeam(data: { teamId: string; organizationId?: string }): Observable<void> {
+  removeTeam(data: { teamId: string; organizationId?: string }): Observable<{ message: string }> {
     return defer(() => this.organization.removeTeam(data)).pipe(
-      map((data) => this.mainService.mapData<void>(data as any)),
+      map((data) => this.mainService.mapData<{ message: string }>(data as any)),
     )
   }
 
-  setActiveTeam(data: { teamId?: string }): Observable<{ session: { activeTeamId?: string } }> {
+  setActiveTeam(data: { teamId?: string }): Observable<Team | null> {
     return defer(() => this.organization.setActiveTeam(data)).pipe(
-      map((data) => this.mainService.mapData<{ session: { activeTeamId?: string } }>(data as any)),
+      map((data) => this.mainService.mapData<Team | null>(data as any)),
     )
   }
 
@@ -333,25 +333,25 @@ export class OrganizationService {
     return this.mainService.readResource<Team[]>(() => this.organization.listUserTeams())
   }
 
-  listTeamMembers(data: { teamId: string }): Observable<Member[]> {
-    return this.mainService.read<Member[]>(() => this.organization.listTeamMembers({ query: data }))
+  listTeamMembers(data: { teamId: string }): Observable<TeamMember[]> {
+    return this.mainService.read<TeamMember[]>(() => this.organization.listTeamMembers({ query: data }))
   }
 
-  teamMembersResource(params: () => { teamId: string }): ResourceRef<Member[] | undefined> {
-    return this.mainService.readResourceWithParams<Member[], { teamId: string }>(params, (data) =>
+  teamMembersResource(params: () => { teamId: string }): ResourceRef<TeamMember[] | undefined> {
+    return this.mainService.readResourceWithParams<TeamMember[], { teamId: string }>(params, (data) =>
       this.organization.listTeamMembers({ query: data }),
     )
   }
 
-  addTeamMember(data: { teamId: string; userId: string }): Observable<Member> {
+  addTeamMember(data: { teamId: string; userId: string }): Observable<TeamMember> {
     return defer(() => this.organization.addTeamMember(data)).pipe(
-      map((data) => this.mainService.mapData<Member>(data as any)),
+      map((data) => this.mainService.mapData<TeamMember>(data as any)),
     )
   }
 
-  removeTeamMember(data: { teamId: string; userId: string }): Observable<void> {
+  removeTeamMember(data: { teamId: string; userId: string }): Observable<{ message: string }> {
     return defer(() => this.organization.removeTeamMember(data)).pipe(
-      map((data) => this.mainService.mapData<void>(data as any)),
+      map((data) => this.mainService.mapData<{ message: string }>(data as any)),
     )
   }
 }
