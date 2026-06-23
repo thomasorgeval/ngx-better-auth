@@ -1,0 +1,85 @@
+name: Better Auth Compatibility
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: Repository to test, for example thomasorgeval/ngx-better-auth
+        required: false
+        type: string
+      ref:
+        description: Branch, tag, or SHA to test
+        required: false
+        type: string
+      versions:
+        description: Better Auth versions to test
+        required: false
+        default: ''
+        type: string
+      include_latest:
+        description: Also test the latest Better Auth tag, even outside the peer range
+        required: false
+        default: false
+        type: boolean
+      verbose:
+        description: Show full command output
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    name: better-auth compatibility
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ github.event_name == 'schedule' }}
+    if: |
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || github.repository }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Check Better Auth compatibility
+        run: |
+          args=()
+          versions="${{ github.event_name == 'workflow_dispatch' && inputs.versions || '' }}"
+
+          if [ -n "$versions" ]; then
+            args+=("$versions")
+          else
+            args+=(--default)
+          fi
+
+          if [ "${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.include_latest) }}" = "true" ]; then
+            args+=(--include-latest)
+          fi
+
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.verbose || false }}" = "true" ]; then
+            args+=(--verbose)
+          fi
+
+          pnpm compat:better-auth "${args[@]}"

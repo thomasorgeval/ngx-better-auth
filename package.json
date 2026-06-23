@@ -12,6 +12,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "compat:better-auth": "node scripts/check-better-auth-compat.mjs",
     "watch": "ng build --watch --configuration development"
   },
   "packageManager": "pnpm@10.15.0",
