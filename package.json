@@ -17,6 +17,12 @@
   },
   "packageManager": "pnpm@10.15.0",
   "license": "MIT",
+  "files": [
+    "fesm2022/**/*.mjs",
+    "index.d.ts",
+    "LICENSE",
+    "README.md"
+  ],
   "keywords": [
     "angular",
     "authentication",

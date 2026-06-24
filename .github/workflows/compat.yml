@@ -2,7 +2,7 @@ name: Better Auth Compatibility
 
 on:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: "0 4 * * *"
   push:
     branches:
       - main
@@ -22,7 +22,7 @@ on:
       versions:
         description: Better Auth versions to test
         required: false
-        default: ''
+        default: ""
         type: string
       include_latest:
         description: Also test the latest Better Auth tag, even outside the peer range
@@ -42,7 +42,6 @@ jobs:
   compatibility:
     name: better-auth compatibility
     runs-on: ubuntu-latest
-    continue-on-error: ${{ github.event_name == 'schedule' }}
     if: |
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -74,9 +73,17 @@ jobs:
             args+=(--default)
           fi
 
-          if [ "${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.include_latest) }}" = "true" ]; then
-            args+=(--include-latest)
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.verbose || false }}" = "true" ]; then
+            args+=(--verbose)
           fi
+
+          pnpm compat:better-auth "${args[@]}"
+
+      - name: Check Better Auth latest compatibility
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.include_latest) }}
+        continue-on-error: true
+        run: |
+          args=(latest)
 
           if [ "${{ github.event_name == 'workflow_dispatch' && inputs.verbose || false }}" = "true" ]; then
             args+=(--verbose)
