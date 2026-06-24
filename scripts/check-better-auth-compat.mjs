@@ -10,6 +10,15 @@ const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const rootPackage = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'))
 const distDir = join(repoRoot, 'dist', 'ngx-better-auth')
 
+const optionalPluginPackages = [
+  '@better-auth/api-key',
+  '@better-auth/oauth-provider',
+  '@better-auth/passkey',
+  '@better-auth/scim',
+  '@better-auth/sso',
+  '@better-auth/stripe',
+]
+
 const args = process.argv.slice(2)
 const flags = new Set(args.filter((arg) => arg.startsWith('--')))
 const explicitBetterAuthVersions = args
@@ -234,19 +243,32 @@ function resolveDefaultBetterAuthVersions() {
 function smokeSources(includeOptionalPlugins) {
   const optionalTypeImports = includeOptionalPlugins
     ? `
+import { apiKeyClient } from '@better-auth/api-key/client'
+import { oauthProviderClient } from '@better-auth/oauth-provider/client'
 import { PasskeyService } from 'ngx-better-auth'
+import { scimClient } from '@better-auth/scim/client'
+import { ssoClient } from '@better-auth/sso/client'
 import { StripeService } from 'ngx-better-auth'
 import type { Passkey } from '@better-auth/passkey'
 import { passkeyClient } from '@better-auth/passkey/client'
 import { stripeClient } from '@better-auth/stripe/client'
+import { ApiKeyService, OAuthProviderService, ScimService, SsoService } from 'ngx-better-auth'
 `
     : ''
 
   const optionalReferences = includeOptionalPlugins
     ? `
+  ApiKeyService,
+  OAuthProviderService,
   PasskeyService,
+  ScimService,
+  SsoService,
   StripeService,
+  apiKeyClient,
+  oauthProviderClient,
   passkeyClient,
+  scimClient,
+  ssoClient,
   stripeClient,
 ] satisfies unknown[]
 
@@ -311,7 +333,11 @@ void exportedSurface
 
   const runtimeOptionalImports = includeOptionalPlugins
     ? `
+await import('@better-auth/api-key/client')
+await import('@better-auth/oauth-provider/client')
 await import('@better-auth/passkey/client')
+await import('@better-auth/scim/client')
+await import('@better-auth/sso/client')
 await import('@better-auth/stripe/client')
 `
     : ''
@@ -660,9 +686,10 @@ function copySourceProject(targetDir, betterAuthVersion) {
   const packageJson = structuredClone(rootPackage)
   packageJson.devDependencies = {
     ...packageJson.devDependencies,
-    '@better-auth/passkey': betterAuthVersion,
-    '@better-auth/stripe': betterAuthVersion,
     'better-auth': betterAuthVersion,
+  }
+  for (const packageName of optionalPluginPackages) {
+    packageJson.devDependencies[packageName] = betterAuthVersion
   }
   delete packageJson.scripts.compat
   delete packageJson.scripts['compat:better-auth']
@@ -727,8 +754,6 @@ function checkVersion(betterAuthVersion) {
       '@angular/core': devDependency('@angular/core'),
       '@angular/forms': devDependency('@angular/forms'),
       '@angular/router': devDependency('@angular/router'),
-      '@better-auth/passkey': includeOptionalPlugins ? betterAuthVersion : undefined,
-      '@better-auth/stripe': includeOptionalPlugins ? betterAuthVersion : undefined,
       'better-auth': betterAuthVersion,
       'ngx-better-auth': `file:${tarball}`,
       rxjs: devDependency('rxjs'),
@@ -739,6 +764,15 @@ function checkVersion(betterAuthVersion) {
       '@types/node': '^24.0.0',
     },
   })
+
+  if (includeOptionalPlugins) {
+    const fixturePackagePath = join(fixtureDir, 'package.json')
+    const fixturePackage = JSON.parse(readFileSync(fixturePackagePath, 'utf8'))
+    for (const packageName of optionalPluginPackages) {
+      fixturePackage.dependencies[packageName] = betterAuthVersion
+    }
+    writeJson(fixturePackagePath, fixturePackage)
+  }
 
   const fixturePackagePath = join(fixtureDir, 'package.json')
   const fixturePackage = JSON.parse(readFileSync(fixturePackagePath, 'utf8'))

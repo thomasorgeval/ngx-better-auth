@@ -132,10 +132,13 @@ The full list of methods  is available at the end of this README.
 - ✅ One Time Token ➡️ `OneTimeTokenService`
 - ✅ JWT ➡️ `JwtService`
 - ✅ Bearer ➡️ `BearerService`, `bearerHeaders()`, `bearerFetchOptions()`
+- ✅ API Key ➡️ `ApiKeyService`
 
 ### OAuth & OIDC Providers
 
 - ✅ Device Authorization ➡️ `DeviceAuthorizationService`
+- ✅ OAuth 2.1 Provider ➡️ `OAuthProviderService`
+- ✅ SSO ➡️ `SsoService`
 
 ### Payments & Billing
 
@@ -145,6 +148,7 @@ The full list of methods  is available at the end of this README.
 
 - ✅ Captcha ➡️ `captchaHeaders()`, `captchaFetchOptions()` for the `x-captcha-response` header
 - ✅ Open API ➡️ `OpenApiService`
+- ✅ SCIM ➡️ `ScimService`
 
 ### Captcha helper
 
