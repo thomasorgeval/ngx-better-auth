@@ -18,10 +18,16 @@
   "packageManager": "pnpm@11.9.0",
   "license": "MIT",
   "files": [
+    "api-key",
     "fesm2022/**/*.mjs",
     "index.d.ts",
+    "oauth-provider",
+    "passkey",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "scim",
+    "sso",
+    "stripe"
   ],
   "keywords": [
     "angular",
