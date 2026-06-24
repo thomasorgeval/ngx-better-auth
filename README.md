@@ -328,3 +328,7 @@ export class UsageComponent {
     }
 }
 ```
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=thomasorgeval/ngx-better-auth&type=Date)](https://www.star-history.com/#thomasorgeval/ngx-better-auth&Date)
