@@ -19,6 +19,8 @@ const optionalPluginPackages = [
   '@better-auth/stripe',
 ]
 
+const secondaryEntrypoints = ['api-key', 'oauth-provider', 'passkey', 'scim', 'sso', 'stripe']
+
 const args = process.argv.slice(2)
 const flags = new Set(args.filter((arg) => arg.startsWith('--')))
 const explicitBetterAuthVersions = args
@@ -109,6 +111,14 @@ function devDependency(name) {
 
 function writeJson(filePath, value) {
   writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`)
+}
+
+function copyPnpmWorkspace(targetDir) {
+  const workspaceFile = join(repoRoot, 'pnpm-workspace.yaml')
+
+  if (existsSync(workspaceFile)) {
+    cpSync(workspaceFile, join(targetDir, 'pnpm-workspace.yaml'))
+  }
 }
 
 function parseVersion(version) {
@@ -245,14 +255,17 @@ function smokeSources(includeOptionalPlugins) {
     ? `
 import { apiKeyClient } from '@better-auth/api-key/client'
 import { oauthProviderClient } from '@better-auth/oauth-provider/client'
-import { PasskeyService } from 'ngx-better-auth'
+import { ApiKeyService } from 'ngx-better-auth/api-key'
+import { OAuthProviderService } from 'ngx-better-auth/oauth-provider'
+import { PasskeyService } from 'ngx-better-auth/passkey'
+import { ScimService } from 'ngx-better-auth/scim'
+import { SsoService } from 'ngx-better-auth/sso'
+import { StripeService } from 'ngx-better-auth/stripe'
 import { scimClient } from '@better-auth/scim/client'
 import { ssoClient } from '@better-auth/sso/client'
-import { StripeService } from 'ngx-better-auth'
 import type { Passkey } from '@better-auth/passkey'
 import { passkeyClient } from '@better-auth/passkey/client'
 import { stripeClient } from '@better-auth/stripe/client'
-import { ApiKeyService, OAuthProviderService, ScimService, SsoService } from 'ngx-better-auth'
 `
     : ''
 
@@ -681,7 +694,11 @@ function copySourceProject(targetDir, betterAuthVersion) {
     cpSync(join(repoRoot, file), join(targetDir, file))
   }
 
+  copyPnpmWorkspace(targetDir)
   cpSync(join(repoRoot, 'src'), join(targetDir, 'src'), { recursive: true })
+  for (const entrypoint of secondaryEntrypoints) {
+    cpSync(join(repoRoot, entrypoint), join(targetDir, entrypoint), { recursive: true })
+  }
 
   const packageJson = structuredClone(rootPackage)
   packageJson.devDependencies = {
@@ -737,6 +754,7 @@ function checkVersion(betterAuthVersion) {
   const fixtureDir = join(tempRoot, `fixture-${betterAuthVersion.replaceAll(/[^a-zA-Z0-9._-]/g, '-')}`)
   const includeOptionalPlugins = !coreOnly
   mkdirSync(fixtureDir)
+  copyPnpmWorkspace(fixtureDir)
 
   writeJson(join(fixtureDir, 'package.json'), {
     name: 'ngx-better-auth-compat-fixture',
