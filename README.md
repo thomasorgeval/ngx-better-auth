@@ -27,18 +27,6 @@ An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better
 npm install ngx-better-auth better-auth
 ```
 
-If you use Passkey, install the split Better Auth Passkey package too:
-
-```bash
-npm install @better-auth/passkey
-```
-
-If you use the Better Auth Stripe plugin, install its split package too. It is an optional peer dependency of `ngx-better-auth` and is only needed by apps that configure `stripeClient(...)`:
-
-```bash
-npm install @better-auth/stripe
-```
-
 ---
 
 ## ⚙️ Setup Provider
@@ -90,21 +78,18 @@ export const appConfig: ApplicationConfig = {
 
 `ngx-better-auth 1.6.x` targets Better Auth `>=1.6.10 <1.7.0`.
 
-If you use Passkey, install the split package and update imports:
-
-```bash
-pnpm add @better-auth/passkey
-```
+Optional plugin services can be imported from secondary entrypoints when they rely on optional peer dependencies:
 
 ```ts
-import { passkeyClient } from '@better-auth/passkey/client'
+import { AuthService, provideBetterAuth } from 'ngx-better-auth'
+
+import { ApiKeyService } from 'ngx-better-auth/api-key'
+import { OAuthProviderService } from 'ngx-better-auth/oauth-provider'
+import { PasskeyService } from 'ngx-better-auth/passkey'
+import { ScimService } from 'ngx-better-auth/scim'
+import { SsoService } from 'ngx-better-auth/sso'
+import { StripeService } from 'ngx-better-auth/stripe'
 ```
-
-SIWE users can keep using `SiweService.getNonce(...)`; internally it now maps to Better Auth's `siwe.getNonce` endpoint introduced in `1.6.10`.
-
-You can inject different services depending on your needs.  
-**AuthService** provides the core Better Auth client methods (signIn, signOut, signUp, e.g.).  
-The full list of methods  is available at the end of this README.
 
 ## 🔌 Plugin compatibility
 
@@ -115,7 +100,7 @@ The full list of methods  is available at the end of this README.
 - ✅ Phone Number ➡️ `PhoneNumberService`
 - ✅ Magic Link ➡️ `MagicLinkService`
 - ✅ Email OTP ➡️ `EmailOtpService`
-- ✅ Passkey ➡️ `PasskeyService`
+- ✅ Passkey ➡️ `PasskeyService` from `ngx-better-auth/passkey`
 - ✅ Generic OAuth ➡️ `GenericOauthService`
 - ✅ OAuth Popup ➡️ `OauthPopupService`
 - ✅ One Tap ➡️ `OneTapService`
@@ -132,72 +117,23 @@ The full list of methods  is available at the end of this README.
 - ✅ One Time Token ➡️ `OneTimeTokenService`
 - ✅ JWT ➡️ `JwtService`
 - ✅ Bearer ➡️ `BearerService`, `bearerHeaders()`, `bearerFetchOptions()`
-- ✅ API Key ➡️ `ApiKeyService`
+- ✅ API Key ➡️ `ApiKeyService` from `ngx-better-auth/api-key`
 
 ### OAuth & OIDC Providers
 
 - ✅ Device Authorization ➡️ `DeviceAuthorizationService`
-- ✅ OAuth 2.1 Provider ➡️ `OAuthProviderService`
-- ✅ SSO ➡️ `SsoService`
+- ✅ OAuth 2.1 Provider ➡️ `OAuthProviderService` from `ngx-better-auth/oauth-provider`
+- ✅ SSO ➡️ `SsoService` from `ngx-better-auth/sso`
 
 ### Payments & Billing
 
-- ✅ Stripe ➡️ `StripeService`
+- ✅ Stripe ➡️ `StripeService` from `ngx-better-auth/stripe`
 
 ### Security & Utilities
 
 - ✅ Captcha ➡️ `captchaHeaders()`, `captchaFetchOptions()` for the `x-captcha-response` header
 - ✅ Open API ➡️ `OpenApiService`
-- ✅ SCIM ➡️ `ScimService`
-
-### Captcha helper
-
-Better Auth's Captcha plugin validates the `x-captcha-response` header. Use `captchaFetchOptions()` with any auth method that supports Better Auth `fetchOptions`.
-
-```ts
-import { AuthService, captchaFetchOptions } from 'ngx-better-auth'
-import { inject } from '@angular/core'
-
-const auth = inject(AuthService)
-
-const captchaResponse = await getCaptchaResponseFromYourWidget()
-
-auth.signInEmail({
-    email: 'user@example.com',
-    password: 'password',
-    ...captchaFetchOptions(captchaResponse),
-})
-```
-
-### Bearer helper
-
-Configure Better Auth with the server-side `bearer()` plugin, then use `BearerService` to resolve a session from a bearer token.
-
-```ts
-import { BearerService } from 'ngx-better-auth'
-import { inject } from '@angular/core'
-
-const bearer = inject(BearerService)
-
-bearer.signIn({ token }).subscribe((session) => {
-    console.log(session?.user.email)
-})
-```
-
-### OpenAPI helper
-
-Configure Better Auth with the server-side `openAPI()` plugin, then use `OpenApiService` to fetch the generated schema or build the reference URL.
-
-```ts
-import { OpenApiService } from 'ngx-better-auth'
-import { inject } from '@angular/core'
-
-const openApi = inject(OpenApiService)
-
-openApi.schema().subscribe((schema) => {
-    console.log(schema.paths)
-})
-```
+- ✅ SCIM ➡️ `ScimService` from `ngx-better-auth/scim`
 
 ## 🔄 Real-time Session
 
@@ -376,7 +312,7 @@ Configure Better Auth with `stripeClient({ subscription: true })`, then inject `
 
 ```ts
 import { inject } from '@angular/core'
-import { StripeService } from 'ngx-better-auth'
+import { StripeService } from 'ngx-better-auth/stripe'
 
 export class UsageComponent {
     private readonly subscriptions = inject(StripeService)
