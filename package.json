@@ -15,7 +15,7 @@
     "compat:better-auth": "node scripts/check-better-auth-compat.mjs",
     "watch": "ng build --watch --configuration development"
   },
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@11.9.0",
   "license": "MIT",
   "files": [
     "fesm2022/**/*.mjs",
