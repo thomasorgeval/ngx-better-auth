@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core'
 import { defer } from 'rxjs'
 import { validatePlugin } from '../../utils/validate-plugin'
 import { MainService } from '../main.service'
+import { BetterAuthFetchOptions } from './captcha.service'
 
 @Injectable({ providedIn: 'root' })
 export class MagicLinkService {
@@ -21,6 +22,7 @@ export class MagicLinkService {
     callbackURL?: string
     newUserCallbackURL?: string
     errorCallbackURL?: string
+    fetchOptions?: BetterAuthFetchOptions
   }) {
     return defer(() => (this.mainService.authClient.signIn as any).magicLink(data))
   }

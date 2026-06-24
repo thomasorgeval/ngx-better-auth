@@ -121,18 +121,83 @@ The full list of methods  is available at the end of this README.
 - ✅ One Tap ➡️ `OneTapService`
 - ✅ Sign In With Ethereum (SIWE) ➡️ `SiweService`
 
-### Authorization
+### Authorization & Management
 - ✅ Admin ➡️ `AdminService`
 - ✅ Organization ➡️ `OrganizationService`
-- ✅ Stripe ➡️ `StripeService`
 
-### Utility
+### API & Tokens
 
-- ✅ Device Authorization ➡️ `DeviceAuthorizationService`
 - ✅ Last Login Method ➡️ `LastLoginMethodService`
 - ✅ Multi Session ➡️ `MultiSessionService`
 - ✅ One Time Token ➡️ `OneTimeTokenService`
 - ✅ JWT ➡️ `JwtService`
+- ✅ Bearer ➡️ `BearerService`, `bearerHeaders()`, `bearerFetchOptions()`
+- ✅ API Key ➡️ `ApiKeyService`
+
+### OAuth & OIDC Providers
+
+- ✅ Device Authorization ➡️ `DeviceAuthorizationService`
+- ✅ OAuth 2.1 Provider ➡️ `OAuthProviderService`
+- ✅ SSO ➡️ `SsoService`
+
+### Payments & Billing
+
+- ✅ Stripe ➡️ `StripeService`
+
+### Security & Utilities
+
+- ✅ Captcha ➡️ `captchaHeaders()`, `captchaFetchOptions()` for the `x-captcha-response` header
+- ✅ Open API ➡️ `OpenApiService`
+- ✅ SCIM ➡️ `ScimService`
+
+### Captcha helper
+
+Better Auth's Captcha plugin validates the `x-captcha-response` header. Use `captchaFetchOptions()` with any auth method that supports Better Auth `fetchOptions`.
+
+```ts
+import { AuthService, captchaFetchOptions } from 'ngx-better-auth'
+import { inject } from '@angular/core'
+
+const auth = inject(AuthService)
+
+const captchaResponse = await getCaptchaResponseFromYourWidget()
+
+auth.signInEmail({
+    email: 'user@example.com',
+    password: 'password',
+    ...captchaFetchOptions(captchaResponse),
+})
+```
+
+### Bearer helper
+
+Configure Better Auth with the server-side `bearer()` plugin, then use `BearerService` to resolve a session from a bearer token.
+
+```ts
+import { BearerService } from 'ngx-better-auth'
+import { inject } from '@angular/core'
+
+const bearer = inject(BearerService)
+
+bearer.signIn({ token }).subscribe((session) => {
+    console.log(session?.user.email)
+})
+```
+
+### OpenAPI helper
+
+Configure Better Auth with the server-side `openAPI()` plugin, then use `OpenApiService` to fetch the generated schema or build the reference URL.
+
+```ts
+import { OpenApiService } from 'ngx-better-auth'
+import { inject } from '@angular/core'
+
+const openApi = inject(OpenApiService)
+
+openApi.schema().subscribe((schema) => {
+    console.log(schema.paths)
+})
+```
 
 ## 🔄 Real-time Session
 

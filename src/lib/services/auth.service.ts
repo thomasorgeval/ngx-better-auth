@@ -1,8 +1,15 @@
 import { computed, inject, Injectable, signal } from '@angular/core'
-import { BetterFetchError } from 'better-auth/client'
+import type { BetterFetchError } from 'better-auth/client'
 import { defer, filter, first, map, Observable, shareReplay, switchMap } from 'rxjs'
 import { MainService } from './main.service'
 import { Provider, Session, User } from '../models'
+import { BetterAuthFetchOptions } from './plugins/captcha.service'
+
+type SessionState = {
+  data: { user: User; session: Session } | null
+  error: BetterFetchError | null
+  isPending: boolean
+}
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +22,7 @@ export class AuthService {
   /**
    * Current authenticated session
    */
-  readonly session = signal<{ user: any; session: any } | null>(null)
+  readonly session = signal<{ user: User; session: Session } | null>(null)
 
   /**
    * Whether there is an active session
@@ -29,15 +36,18 @@ export class AuthService {
   readonly sessionState$!: Observable<{ user: User; session: Session } | null>
 
   constructor() {
-    this.session$()
+    const useSession$ = new Observable<SessionState>((subscriber) => {
+      const unsubscribe = this.client.useSession.subscribe((value: unknown) => subscriber.next(value as SessionState))
 
-    const useSession$ = new Observable<{
-      data: { user: User; session: Session } | null
-      error: BetterFetchError | null
-      isPending: boolean
-    }>((subscriber) => {
-      this.client.useSession.subscribe((value: any) => subscriber.next(value as any))
-    })
+      return () => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe()
+          return
+        }
+
+        unsubscribe?.unsubscribe?.()
+      }
+    }).pipe(shareReplay(1))
 
     this.sessionState$ = useSession$.pipe(
       filter((session) => !session.isPending),
@@ -47,8 +57,22 @@ export class AuthService {
         }
         return session.data
       }),
-      shareReplay(1),
     )
+
+    useSession$.subscribe((session) => {
+      if (session.isPending) {
+        this.session.set(null)
+        return
+      }
+      if (session.error) {
+        if (session.error.status !== 401) {
+          console.error('Error fetching session:', session.error)
+        }
+        this.session.set(null)
+        return
+      }
+      this.session.set(session.data)
+    })
   }
 
   /**
@@ -60,31 +84,19 @@ export class AuthService {
     return this.sessionState$.pipe(map((session) => !!session?.session))
   }
 
-  private session$() {
-    this.client.useSession.subscribe((session: any) => {
-      if (session.isPending) {
-        this.session.set(null)
-        return
-      }
-      if (session.error) {
-        const error: BetterFetchError = session.error
-        if (error.status !== 401) {
-          console.error('Error fetching session:', error)
-        }
-        this.session.set(null)
-        return
-      }
-      this.session.set(session.data)
-    })
-  }
-
-  signInEmail(data: { email: string; password: string; rememberMe?: boolean }): Observable<{
+  signInEmail(data: {
+    email: string
+    password: string
+    rememberMe?: boolean
+    fetchOptions?: BetterAuthFetchOptions
+  }): Observable<{
     user: User
     session: Session
   }> {
     return defer(() => this.client.signIn.email(data)).pipe(
       map((data) => this.mainService.mapData(data as any)),
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
+      first(),
     )
   }
 
@@ -100,6 +112,7 @@ export class AuthService {
     password: string
     username: string
     displayUsername?: string
+    fetchOptions?: BetterAuthFetchOptions
   }): Observable<{
     user: User
     session: Session
@@ -107,6 +120,7 @@ export class AuthService {
     return defer(() => this.client.signUp.email(data)).pipe(
       map((data) => this.mainService.mapData(data as any)),
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
+      first(),
     )
   }
 
@@ -132,6 +146,7 @@ export class AuthService {
     ).pipe(
       map((data) => this.mainService.mapData(data as any)),
       switchMap(() => this.sessionState$.pipe(filter((s) => s !== null))),
+      first(),
     )
   }
 
@@ -139,6 +154,7 @@ export class AuthService {
     return defer(() => this.client.signOut()).pipe(
       map((data) => this.mainService.mapData(data as any)),
       switchMap(() => this.sessionState$.pipe(filter((s) => s === null))),
+      first(),
     )
   }
 
@@ -148,7 +164,11 @@ export class AuthService {
     )
   }
 
-  requestPasswordReset(data: { email: string; redirectTo?: string }): Observable<{ status: boolean }> {
+  requestPasswordReset(data: {
+    email: string
+    redirectTo?: string
+    fetchOptions?: BetterAuthFetchOptions
+  }): Observable<{ status: boolean }> {
     return defer(() => this.client.requestPasswordReset(data)).pipe(
       map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
     )
