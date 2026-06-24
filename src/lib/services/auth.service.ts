@@ -3,6 +3,7 @@ import { BetterFetchError } from 'better-auth/client'
 import { defer, filter, first, map, Observable, shareReplay, switchMap } from 'rxjs'
 import { MainService } from './main.service'
 import { Provider, Session, User } from '../models'
+import { BetterAuthFetchOptions } from './plugins/captcha.service'
 
 @Injectable({
   providedIn: 'root',
@@ -78,7 +79,7 @@ export class AuthService {
     })
   }
 
-  signInEmail(data: { email: string; password: string; rememberMe?: boolean }): Observable<{
+  signInEmail(data: { email: string; password: string; rememberMe?: boolean; fetchOptions?: BetterAuthFetchOptions }): Observable<{
     user: User
     session: Session
   }> {
@@ -100,6 +101,7 @@ export class AuthService {
     password: string
     username: string
     displayUsername?: string
+    fetchOptions?: BetterAuthFetchOptions
   }): Observable<{
     user: User
     session: Session
@@ -148,7 +150,11 @@ export class AuthService {
     )
   }
 
-  requestPasswordReset(data: { email: string; redirectTo?: string }): Observable<{ status: boolean }> {
+  requestPasswordReset(data: {
+    email: string
+    redirectTo?: string
+    fetchOptions?: BetterAuthFetchOptions
+  }): Observable<{ status: boolean }> {
     return defer(() => this.client.requestPasswordReset(data)).pipe(
       map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
     )

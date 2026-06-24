@@ -4,6 +4,7 @@ import { validatePlugin } from '../../utils/validate-plugin'
 import { MainService } from '../main.service'
 import { AuthService } from '../auth.service'
 import { User } from '../../models'
+import { BetterAuthFetchOptions } from './captcha.service'
 
 type EmailOtpType = 'sign-in' | 'change-email' | 'email-verification' | 'forget-password'
 
@@ -26,7 +27,11 @@ export class EmailOtpService {
     )
   }
 
-  sendVerificationOtp(data: { email: string; type: EmailOtpType }): Observable<{ success: boolean }> {
+  sendVerificationOtp(data: {
+    email: string
+    type: EmailOtpType
+    fetchOptions?: BetterAuthFetchOptions
+  }): Observable<{ success: boolean }> {
     return defer(() => this.emailOtp.sendVerificationOtp(data)).pipe(
       map((data) => this.mainService.mapData<{ success: boolean }>(data as any)),
     )
@@ -56,13 +61,13 @@ export class EmailOtpService {
     )
   }
 
-  requestPasswordReset(data: { email: string }): Observable<{ success: boolean }> {
+  requestPasswordReset(data: { email: string; fetchOptions?: BetterAuthFetchOptions }): Observable<{ success: boolean }> {
     return defer(() => this.emailOtp.requestPasswordReset(data)).pipe(
       map((data) => this.mainService.mapData<{ success: boolean }>(data as any)),
     )
   }
 
-  forgetPassword(data: { email: string }): Observable<{ success: boolean }> {
+  forgetPassword(data: { email: string; fetchOptions?: BetterAuthFetchOptions }): Observable<{ success: boolean }> {
     return defer(() => (this.mainService.authClient.forgetPassword as any).emailOtp(data)).pipe(
       map((data) => this.mainService.mapData<{ success: boolean }>(data as any)),
     )
