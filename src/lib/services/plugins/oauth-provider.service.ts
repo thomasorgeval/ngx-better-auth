@@ -20,7 +20,12 @@ export class OAuthProviderService {
     this.oauth2 = client.oauth2
   }
 
-  consent(data: { accept: boolean; scope?: string; oauth_query?: string }): Observable<OAuthProviderRedirectResult> {
+  consent(data: {
+    accept: boolean
+    scope?: string
+    oauth_query?: string
+    claims?: string | Record<string, unknown>
+  }): Observable<OAuthProviderRedirectResult> {
     return defer(() => this.oauth2.consent(data)).pipe(
       map((data) => this.mainService.mapData<OAuthProviderRedirectResult>(data as any)),
     )

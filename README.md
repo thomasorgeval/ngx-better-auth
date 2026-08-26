@@ -8,7 +8,7 @@ An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better
 ![downloads](https://img.shields.io/npm/dm/ngx-better-auth)
 
 ![angular](https://img.shields.io/badge/angular-20+-dd0031?logo=angular&logoColor=white)
-![better-auth](https://img.shields.io/badge/better--auth-1.6.x-blueviolet)
+![better-auth](https://img.shields.io/badge/better--auth-1.7.x-blueviolet)
 
 ---
 
@@ -16,6 +16,7 @@ An **Angular 20+ wrapper for [Better Auth](https://github.com/better-auth/better
 
 | ngx-better-auth | Angular | Better Auth |
 |-----------------|---------|-------------|
+| `1.7.x`         | `>=20`  | `>=1.7.0 <1.8.0` |
 | `1.6.x`         | `>=20`  | `>=1.6.10 <1.7.0` |
 | `0.11.x`        | `>=20`  | `>=1.3.7`   |
 
@@ -74,10 +75,6 @@ export const appConfig: ApplicationConfig = {
 
 ## 🧩 Different services
 
-### Migrating to 1.6.x
-
-`ngx-better-auth 1.6.x` targets Better Auth `>=1.6.10 <1.7.0`.
-
 Optional plugin services can be imported from secondary entrypoints when they rely on optional peer dependencies:
 
 ```ts
@@ -86,7 +83,6 @@ import { AuthService, provideBetterAuth } from 'ngx-better-auth'
 import { ApiKeyService } from 'ngx-better-auth/api-key'
 import { OAuthProviderService } from 'ngx-better-auth/oauth-provider'
 import { PasskeyService } from 'ngx-better-auth/passkey'
-import { ScimService } from 'ngx-better-auth/scim'
 import { SsoService } from 'ngx-better-auth/sso'
 import { StripeService } from 'ngx-better-auth/stripe'
 ```
@@ -101,7 +97,7 @@ import { StripeService } from 'ngx-better-auth/stripe'
 - ✅ Magic Link ➡️ `MagicLinkService`
 - ✅ Email OTP ➡️ `EmailOtpService`
 - ✅ Passkey ➡️ `PasskeyService` from `ngx-better-auth/passkey`
-- ✅ Generic OAuth ➡️ `GenericOauthService`
+- ✅ Generic OAuth providers ➡️ `GenericOauthService` through Better Auth's social sign-in API
 - ✅ OAuth Popup ➡️ `OauthPopupService`
 - ✅ One Tap ➡️ `OneTapService`
 - ✅ Sign In With Ethereum (SIWE) ➡️ `SiweService`
@@ -133,7 +129,7 @@ import { StripeService } from 'ngx-better-auth/stripe'
 
 - ✅ Captcha ➡️ `captchaHeaders()`, `captchaFetchOptions()` for the `x-captcha-response` header
 - ✅ Open API ➡️ `OpenApiService`
-- ✅ SCIM ➡️ `ScimService` from `ngx-better-auth/scim`
+- ℹ️ SCIM provisioning is server-side in Better Auth 1.7 and no longer has an Angular client service
 
 ## 🔄 Real-time Session
 
@@ -304,30 +300,6 @@ const usernameControl = new FormControl('', {
     asyncValidators: [usernameAvailableValidator(usernameService, initialUsername)],
     updateOn: 'change'
 })
-```
-
-## 💰 Stripe subscriptions
-
-Configure Better Auth with `stripeClient({ subscription: true })`, then inject `StripeService` to start checkouts, list subscriptions, cancel, restore, or open the billing portal.
-
-```ts
-import { inject } from '@angular/core'
-import { StripeService } from 'ngx-better-auth/stripe'
-
-export class UsageComponent {
-    private readonly subscriptions = inject(StripeService)
-
-    startCheckout(orgId: string) {
-        return this.subscriptions.upgrade({
-            plan: 'starter',
-            annual: false,
-            customerType: 'organization',
-            referenceId: orgId,
-            successUrl: '/organization/usage?checkout=success',
-            cancelUrl: '/organization/usage?checkout=cancelled',
-        })
-    }
-}
 ```
 
 ## ⭐ Star History

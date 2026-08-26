@@ -1,9 +1,11 @@
 import { inject, Injectable, type ResourceRef } from '@angular/core'
 import { defer, map, Observable } from 'rxjs'
 import { MainService } from './main.service'
-import { Account, Provider, User } from '../models'
+import { Account, Provider } from '../models'
 
-type AccountTokenRequest = { providerId: Provider | string; accountId?: string; userId?: string }
+export type AccountSelector =
+  | { accountId: string; userId?: string; useAccountCookie?: never }
+  | { accountId?: never; userId?: string; useAccountCookie: true }
 
 export interface AccountAccessToken {
   accessToken: string
@@ -24,8 +26,19 @@ export interface AccountRefreshToken {
 }
 
 export interface AccountInfo {
-  user: User
-  data: Record<string, any>
+  account: {
+    id: string
+    providerId: string
+    issuer: string
+    accountId: string
+  }
+  user: {
+    name?: string
+    email?: string | null
+    image?: string
+    emailVerified: boolean
+  }
+  data: Record<string, unknown>
 }
 
 @Injectable({ providedIn: 'root' })
@@ -52,33 +65,39 @@ export class AccountService {
       accessToken?: string
       refreshToken?: string
     }
+    requestSignUp?: boolean
+    errorCallbackURL?: string
+    disableRedirect?: boolean
+    loginHint?: string
+    additionalParams?: Record<string, string>
+    additionalData?: Record<string, unknown>
   }): Observable<{ url: string; redirect: boolean }> {
     return defer(() => this.client.linkSocial(data)).pipe(
       map((data) => this.mainService.mapData<{ url: string; redirect: boolean }>(data as any)),
     )
   }
 
-  unlinkAccount(data: { providerId: Provider; accountId: string }): Observable<{ status: boolean }> {
+  unlinkAccount(data: { accountId: string }): Observable<{ status: boolean }> {
     return defer(() => this.client.unlinkAccount(data)).pipe(
       map((data) => this.mainService.mapData<{ status: boolean }>(data as any)),
     )
   }
 
-  getAccessToken(data: AccountTokenRequest): Observable<AccountAccessToken> {
+  getAccessToken(data: AccountSelector): Observable<AccountAccessToken> {
     return defer(() => this.client.getAccessToken(data)).pipe(
       map((data) => this.mainService.mapData<AccountAccessToken>(data as any)),
     )
   }
 
-  refreshToken(data: AccountTokenRequest): Observable<AccountRefreshToken> {
+  refreshToken(data: AccountSelector): Observable<AccountRefreshToken> {
     return defer(() => this.client.refreshToken(data)).pipe(
       map((data) => this.mainService.mapData<AccountRefreshToken>(data as any)),
     )
   }
 
-  accountInfo(data?: AccountTokenRequest): Observable<AccountInfo | null> {
-    return defer(() => this.client.accountInfo(data ? { query: data } : undefined)).pipe(
-      map((data) => this.mainService.mapData<AccountInfo | null>(data as any)),
+  accountInfo(data: AccountSelector): Observable<AccountInfo> {
+    return defer(() => this.client.accountInfo({ query: data })).pipe(
+      map((data) => this.mainService.mapData<AccountInfo>(data as any)),
     )
   }
 }

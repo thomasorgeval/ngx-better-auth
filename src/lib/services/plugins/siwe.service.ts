@@ -8,12 +8,6 @@ export interface SiweNonceResult {
   nonce: string
 }
 
-export type SiweNonceRequest = {
-  walletAddress?: string
-  address?: string
-  chainId?: number
-}
-
 export interface SiweVerifyResult {
   token: string
   success: boolean
@@ -38,11 +32,10 @@ export class SiweService {
   }
 
   /**
-   * Fetches a nonce for the given wallet address to be included in the SIWE message.
-   * @param data - The wallet address and optional chain ID
+   * Fetches a nonce to be included in the SIWE message.
    */
-  getNonce(data: SiweNonceRequest): Observable<SiweNonceResult> {
-    return defer(() => this.siwe.getNonce(data)).pipe(
+  getNonce(): Observable<SiweNonceResult> {
+    return defer(() => this.siwe.getNonce()).pipe(
       map((res) => this.mainService.mapData<SiweNonceResult>(res as any)),
     )
   }
@@ -50,16 +43,10 @@ export class SiweService {
   /**
    * Verifies a signed SIWE message and signs the user in.
    * On success, waits for the session to be established before emitting.
-   * @param data - The signed message, signature, wallet address, optional chain ID and optional email
+   * @param data - The signed message and signature
    */
-  verifyMessage(data: {
-    message: string
-    signature: string
-    walletAddress: string
-    chainId?: number
-    email?: string
-  }): Observable<SiweVerifyResult> {
-    return defer(() => this.siwe.verifySiweMessage(data)).pipe(
+  verifyMessage(data: { message: string; signature: string }): Observable<SiweVerifyResult> {
+    return defer(() => this.siwe.verify(data)).pipe(
       map((res) => this.mainService.mapData<SiweVerifyResult>(res as any)),
       switchMap((result) =>
         this.authService.sessionState$.pipe(

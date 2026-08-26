@@ -1,21 +1,11 @@
 import { inject, Injectable } from '@angular/core'
-import { defer, filter, switchMap } from 'rxjs'
-import { MainService } from '../main.service'
-import { validatePlugin } from '../../utils/validate-plugin'
+import { AccountService } from '../account.service'
 import { AuthService } from '../auth.service'
 
 @Injectable({ providedIn: 'root' })
 export class GenericOauthService {
-  private readonly mainService = inject(MainService)
+  private readonly accountService = inject(AccountService)
   private readonly authService = inject(AuthService)
-
-  oauth: any
-
-  constructor() {
-    const client = this.mainService.authClient as { oauth2?: any }
-    validatePlugin(client, 'oauth2')
-    this.oauth = client.oauth2
-  }
 
   signIn(data: {
     providerId: string
@@ -26,12 +16,12 @@ export class GenericOauthService {
     scopes?: string[]
     requestSignUp?: boolean
   }) {
-    return defer(() => (this.mainService.authClient.signIn as any).oauth2(data)).pipe(
-      switchMap(() => this.authService.sessionState$.pipe(filter((s) => s !== null))),
-    )
+    const { providerId, ...options } = data
+    return this.authService.signInProvider({ provider: providerId, ...options })
   }
 
   link(data: { providerId: string; callbackURL: string }) {
-    return defer(() => this.oauth.link(data))
+    const { providerId, ...options } = data
+    return this.accountService.linkSocial({ provider: providerId, ...options })
   }
 }

@@ -129,11 +129,23 @@ export class AuthService {
     callbackURL?: string
     disableRedirect?: boolean
     errorCallbackURL?: string
-    idToken?: string
+    idToken?: {
+      token: string
+      nonce?: string
+      accessToken?: string
+      refreshToken?: string
+      expiresAt?: number
+      user?: {
+        name?: { firstName?: string; lastName?: string }
+        email?: string
+      }
+    }
     loginHint?: string
     newUserCallbackURL?: string
     requestSignUp?: boolean
     scopes?: string[]
+    additionalParams?: Record<string, string>
+    additionalData?: Record<string, unknown>
   }): Observable<{
     user: User
     session: Session

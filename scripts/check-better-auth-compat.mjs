@@ -14,12 +14,11 @@ const optionalPluginPackages = [
   '@better-auth/api-key',
   '@better-auth/oauth-provider',
   '@better-auth/passkey',
-  '@better-auth/scim',
   '@better-auth/sso',
   '@better-auth/stripe',
 ]
 
-const secondaryEntrypoints = ['api-key', 'oauth-provider', 'passkey', 'scim', 'sso', 'stripe']
+const secondaryEntrypoints = ['api-key', 'oauth-provider', 'passkey', 'sso', 'stripe']
 
 const args = process.argv.slice(2)
 const flags = new Set(args.filter((arg) => arg.startsWith('--')))
@@ -38,12 +37,12 @@ if ((explicitBetterAuthVersions.length === 0 && !usesDefaultVersions) || flags.h
 Examples:
   pnpm compat:better-auth --default
   pnpm compat:better-auth --default --include-latest
-  pnpm compat:better-auth 1.6.19
-  pnpm compat:better-auth 1.6.9 1.6.10 1.6.19
-  pnpm compat:better-auth 1.6.9,1.6.10,1.6.19
+  pnpm compat:better-auth 1.7.1
+  pnpm compat:better-auth 1.7.0 1.7.1
+  pnpm compat:better-auth 1.7.0,1.7.1
   pnpm compat:better-auth latest
-  pnpm compat:better-auth "1.6.x" --skip-build
-  pnpm compat:better-auth 1.6.19 --verbose
+  pnpm compat:better-auth "1.7.x" --skip-build
+  pnpm compat:better-auth 1.7.1 --verbose
 `)
   process.exit(explicitBetterAuthVersions.length > 0 || usesDefaultVersions ? 0 : 1)
 }
@@ -122,7 +121,10 @@ function copyPnpmWorkspace(targetDir) {
 }
 
 function parseVersion(version) {
-  const match = String(version).trim().replace(/^[~^=v]+/, '').match(/^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/)
+  const match = String(version)
+    .trim()
+    .replace(/^[~^=v]+/, '')
+    .match(/^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/)
   if (!match) {
     return null
   }
@@ -258,10 +260,8 @@ import { oauthProviderClient } from '@better-auth/oauth-provider/client'
 import { ApiKeyService } from 'ngx-better-auth/api-key'
 import { OAuthProviderService } from 'ngx-better-auth/oauth-provider'
 import { PasskeyService } from 'ngx-better-auth/passkey'
-import { ScimService } from 'ngx-better-auth/scim'
 import { SsoService } from 'ngx-better-auth/sso'
 import { StripeService } from 'ngx-better-auth/stripe'
-import { scimClient } from '@better-auth/scim/client'
 import { ssoClient } from '@better-auth/sso/client'
 import type { Passkey } from '@better-auth/passkey'
 import { passkeyClient } from '@better-auth/passkey/client'
@@ -274,13 +274,11 @@ import { stripeClient } from '@better-auth/stripe/client'
   ApiKeyService,
   OAuthProviderService,
   PasskeyService,
-  ScimService,
   SsoService,
   StripeService,
   apiKeyClient,
   oauthProviderClient,
   passkeyClient,
-  scimClient,
   ssoClient,
   stripeClient,
 ] satisfies unknown[]
@@ -293,17 +291,21 @@ void passkey
 `
 
   const typecheck = `
-import type { BetterAuthClientOptions } from 'better-auth/client'
+import { createAuthClient, type BetterAuthClientOptions } from 'better-auth/client'
+import type { Observable } from 'rxjs'
 import { anonymousClient, emailOTPClient, magicLinkClient, multiSessionClient, oneTapClient, organizationClient, siweClient, twoFactorClient, usernameClient } from 'better-auth/client/plugins'
 import {
+  type Account,
   AccountService,
   AnonymousService,
   AuthService,
   EmailOtpService,
+  GenericOauthService,
   MagicLinkService,
   MultiSessionService,
   OrganizationService,
   SessionService,
+  SiweService,
   TwoFactorService,
   UsernameService,
   canActivate,
@@ -342,6 +344,74 @@ const exportedSurface = [
 ${optionalReferences}
 
 void exportedSurface
+
+declare const accountService: AccountService
+declare const authService: AuthService
+declare const genericOauthService: GenericOauthService
+declare const organizationService: OrganizationService
+declare const siweService: SiweService
+declare const twoFactorService: TwoFactorService
+
+const account: Account = {
+  id: 'account-id',
+  providerId: 'github',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  accountId: 'provider-account-id',
+  userId: 'user-id',
+  issuer: 'https://github.com',
+  scopes: [],
+}
+void account
+
+accountService.unlinkAccount({ accountId: 'account-id' })
+accountService.getAccessToken({ accountId: 'account-id' })
+accountService.refreshToken({ useAccountCookie: true })
+accountService.accountInfo({ accountId: 'account-id' })
+authService.signInProvider({
+  provider: 'custom-provider',
+  idToken: { token: 'id-token', expiresAt: 0, user: { name: { firstName: 'Ada' } } },
+  additionalParams: { prompt: 'consent' },
+})
+genericOauthService.signIn({ providerId: 'custom-provider', callbackURL: '/account' })
+genericOauthService.link({ providerId: 'custom-provider', callbackURL: '/account' })
+
+siweService.getNonce()
+siweService.verifyMessage({ message: 'message', signature: 'signature' })
+
+const twoFactorResult: Observable<
+  { method: 'otp' } | { method: 'totp'; totpURI: string; backupCodes: string[] }
+> = twoFactorService.enable({ password: 'password', method: 'totp' })
+void twoFactorResult
+organizationService.updateTeam({ teamId: 'team-id', data: { name: 'Platform' } })
+// @ts-expect-error Better Auth 1.7 no longer accepts persisted team fields.
+organizationService.updateTeam({ teamId: 'team-id', data: { createdAt: new Date() } })
+${
+  includeOptionalPlugins
+    ? `
+declare const apiKeyService: ApiKeyService
+declare const oauthProviderService: OAuthProviderService
+declare const passkeyService: PasskeyService
+
+const optionalClient = createAuthClient({
+  baseURL: 'http://localhost:3000',
+  plugins: [apiKeyClient(), oauthProviderClient(), passkeyClient()],
+})
+
+// @ts-expect-error Better Auth 1.7 removed the client-side delete-all-expired endpoint.
+apiKeyService.deleteAllExpired()
+oauthProviderService.consent({ accept: true, claims: { email: true } })
+passkeyService.signIn({ autoFill: true })
+// @ts-expect-error Better Auth 1.7 no longer accepts callbackURL during passkey sign-in.
+passkeyService.signIn({ callbackURL: '/account' })
+
+optionalClient.oauth2.consent({ accept: true, claims: { email: true } })
+optionalClient.signIn.passkey({ autoFill: true })
+// @ts-expect-error Better Auth 1.7 exposes expired API-key cleanup only on the server.
+optionalClient.apiKey.deleteAllExpiredApiKeys()
+`
+    : ''
+}
 `
 
   const runtimeOptionalImports = includeOptionalPlugins
@@ -349,7 +419,6 @@ void exportedSurface
 await import('@better-auth/api-key/client')
 await import('@better-auth/oauth-provider/client')
 await import('@better-auth/passkey/client')
-await import('@better-auth/scim/client')
 await import('@better-auth/sso/client')
 await import('@better-auth/stripe/client')
 `
@@ -371,7 +440,7 @@ console.log('runtime imports ok')
 function betterAuthApiContractSource() {
   return `
 import { createAuthClient } from 'better-auth/client'
-import { organizationClient, siweClient } from 'better-auth/client/plugins'
+import { organizationClient, siweClient, twoFactorClient } from 'better-auth/client/plugins'
 
 const client = createAuthClient({
   baseURL: 'http://localhost:3000',
@@ -381,6 +450,7 @@ const client = createAuthClient({
       dynamicAccessControl: { enabled: true },
     }),
     siweClient(),
+    twoFactorClient(),
   ],
 })
 
@@ -453,10 +523,33 @@ const organizationCalls = [
 void organizationCalls
 
 const siweCalls = [
-  client.siwe.getNonce({ walletAddress: '0x0000000000000000000000000000000000000000', chainId: 1 }),
+  client.siwe.getNonce(),
+  client.siwe.verify({ message: 'message', signature: 'signature' }),
 ] satisfies unknown[]
 
 void siweCalls
+
+const accountCalls = [
+  client.listAccounts(),
+  client.unlinkAccount({ accountId: 'account-id' }),
+  client.getAccessToken({ accountId: 'account-id' }),
+  client.refreshToken({ useAccountCookie: true }),
+  client.accountInfo({ query: { accountId: 'account-id' } }),
+] satisfies unknown[]
+
+void accountCalls
+
+const twoFactorCalls = [
+  client.twoFactor.enable({ password: 'password', method: 'totp' }),
+  client.twoFactor.enable({ password: 'password', method: 'otp' }),
+] satisfies unknown[]
+
+void twoFactorCalls
+
+client.organization.updateTeam({
+  teamId: 'team-id',
+  data: { name: 'Platform' },
+})
 `
 }
 
@@ -852,7 +945,6 @@ try {
   if (failed.length > 0) {
     process.exitCode = 1
   }
-
 } catch (error) {
   console.log(`\nFAILED ${rootPackage.name}@${rootPackage.version}`)
   console.log(error instanceof Error ? error.message : error)

@@ -23,7 +23,6 @@ export * from './plugins/open-api.service'
 export * from './plugins/api-key.service'
 export * from './plugins/sso.service'
 export * from './plugins/oauth-provider.service'
-export * from './plugins/scim.service'
 
 export * from './plugins/admin.service'
 export * from './plugins/organization.service'

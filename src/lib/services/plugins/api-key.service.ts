@@ -107,10 +107,4 @@ export class ApiKeyService {
       this.apiKey.list({ query: data ?? {} }),
     )
   }
-
-  deleteAllExpired(): Observable<{ success: boolean; error: unknown }> {
-    return defer(() => this.apiKey.deleteAllExpiredApiKeys()).pipe(
-      map((data) => this.mainService.mapData<{ success: boolean; error: unknown }>(data as any)),
-    )
-  }
 }

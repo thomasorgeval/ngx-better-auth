@@ -25,7 +25,13 @@ export class PasskeyService {
     )
   }
 
-  signIn(data: { email: string; autoFill?: boolean; callbackURL?: string }): Observable<unknown> {
+  signIn(
+    data: {
+      autoFill?: boolean
+      extensions?: AuthenticationExtensionsClientInputs
+      returnWebAuthnResponse?: boolean
+    } = {},
+  ): Observable<unknown> {
     return defer(() => (this.mainService.authClient.signIn as any).passkey(data))
   }
 

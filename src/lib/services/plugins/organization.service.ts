@@ -300,10 +300,7 @@ export class OrganizationService {
     )
   }
 
-  updateTeam(data: {
-    teamId: string
-    data: { name?: string; organizationId?: string; createdAt?: Date; updatedAt?: Date }
-  }): Observable<Team | null> {
+  updateTeam(data: { teamId: string; data: { name?: string; organizationId?: string } }): Observable<Team | null> {
     return defer(() => this.organization.updateTeam(data)).pipe(
       map((data) => this.mainService.mapData<Team | null>(data as any)),
     )
