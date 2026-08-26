@@ -383,6 +383,7 @@ const twoFactorResult: Observable<
   { method: 'otp' } | { method: 'totp'; totpURI: string; backupCodes: string[] }
 > = twoFactorService.enable({ password: 'password', method: 'totp' })
 void twoFactorResult
+twoFactorService.enable({ password: 'password' })
 organizationService.updateTeam({ teamId: 'team-id', data: { name: 'Platform' } })
 // @ts-expect-error Better Auth 1.7 no longer accepts persisted team fields.
 organizationService.updateTeam({ teamId: 'team-id', data: { createdAt: new Date() } })
@@ -540,6 +541,7 @@ const accountCalls = [
 void accountCalls
 
 const twoFactorCalls = [
+  client.twoFactor.enable({ password: 'password' }),
   client.twoFactor.enable({ password: 'password', method: 'totp' }),
   client.twoFactor.enable({ password: 'password', method: 'otp' }),
 ] satisfies unknown[]

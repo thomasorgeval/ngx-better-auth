@@ -21,7 +21,7 @@ export class TwoFactorService {
   enable(data: {
     password: string
     issuer?: string
-    method: 'otp' | 'totp'
+    method?: 'otp' | 'totp'
   }): Observable<{ method: 'otp' } | { method: 'totp'; totpURI: string; backupCodes: string[] }> {
     return defer(() => this.twoFactor.enable(data)).pipe(
       map((data) =>
